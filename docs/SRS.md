@@ -1,262 +1,354 @@
-# Software Requirements Specification (SRS)
-## Quiz Game 
+# Software Requirements Specification (SRS) — Quiz Game
 
-**Document Version:** 1.0  
-**Status:** Proposed / Planning  
-**Project Type:** Solo Course Project
+| Field | Details |
+|---|---|
+| Project Name | Quiz Game |
+| Document | Software Requirements Specification (SRS) |
+| Version | MVP + Beta |
+| Status | Draft |
+| Frontend | React + TypeScript |
+| Backend | FastAPI + Python |
 
 ## 1. Introduction
 
 ### 1.1 Purpose
 
-This document specifies the functional and non-functional requirements of Quiz Game. It defines the expected behavior of the MVP and Beta releases and provides a basis for implementation and testing.
+This document defines the functional and non-functional requirements for Quiz Game. It specifies the expected system behaviour, API requirements, data validation rules, user permissions, and acceptance criteria for the MVP and Beta releases.
 
 ### 1.2 Scope
 
-Quiz Game is a web-based application for quiz creation, question management, quiz attempts, score calculation, and user management. The frontend will use React.js with TypeScript, and the backend will use FastAPI with Python. The system will use REST APIs for communication and SQLite for data storage.
+Quiz Game is a web application for managing and attempting multiple-choice quizzes. The backend exposes REST APIs, validates incoming data, stores quiz information, and calculates scores. The frontend provides the user interface.
 
-Authentication, authorization, role-based access control (RBAC), and security scopes will be implemented to protect restricted operations and data.
+The MVP supports core quiz operations and local execution. The Beta adds authentication, roles, profile features, security scopes, and deployment.
 
 ### 1.3 Definitions
 
-- **REST API:** An HTTP-based interface used to communicate with the backend.
-- **Authentication:** Verification of a user's identity.
-- **Authorization:** Verification of whether a user is permitted to perform an action.
-- **RBAC:** Role-Based Access Control, where permissions depend on a user's assigned role.
-- **Security Scope:** A permission required to perform a protected operation.
-- **MVP:** Minimum Viable Product for the mid-term assessment.
-- **Beta:** Extended release for the final assessment.
-- **CRUD:** Create, Read, Update, and Delete.
+- **MVP:** Minimum Viable Product for the mid-term demonstration.
+- **Beta:** Extended release for the final demonstration.
+- **REST API:** HTTP-based interface for communication between frontend and backend.
+- **MCQ:** Multiple-choice question.
+- **RBAC:** Role-Based Access Control.
+- **Scope:** A specific permission required to perform a protected action.
+- **Guest:** A user who is not authenticated.
+- **Student:** An authenticated user who participates in quizzes.
+- **Admin:** An authenticated user who manages quiz content and user access.
 
 ## 2. Overall Description
 
 ### 2.1 Product Perspective
 
-The system will contain three main components:
+The application consists of:
 
-1. **Frontend:** React.js with TypeScript for the user interface.
-2. **Backend:** FastAPI with Python for REST APIs, business logic, validation, authentication, and authorization.
-3. **Database:** SQLite for storing application data.
-
-The frontend will send HTTP requests to the backend. The backend will validate the requests, apply business rules, interact with the database, and return JSON responses.
+1. A React + TypeScript frontend.
+2. A FastAPI + Python backend.
+3. A database for storing quizzes, questions, users, and attempts.
+4. REST APIs for communication between frontend and backend.
+5. An authentication and authorization layer introduced in Beta.
 
 ### 2.2 User Classes
 
-| User Class | Responsibilities | Release |
+| User Class | Capabilities | Release |
 |---|---|---|
-| API Tester | Tests core quiz APIs using Swagger UI or Postman. | MVP |
-| Student | Views published quizzes, submits answers, and views personal results. | Beta |
-| Teacher | Creates and manages owned quizzes and views their results. | Beta |
-| Admin | Manages user accounts, roles, and account status. | Beta |
+| Guest | Browse published quizzes and view public quiz details. | MVP/Beta |
+| Student | Attempt quizzes and view results. In Beta, access personal history and profile. | MVP/Beta |
+| Admin | Manage quizzes and questions. In Beta, manage user accounts and roles. | MVP/Beta |
+
+During the MVP, roles are conceptual only; secure authentication and enforcement of these permissions are Beta requirements. Any MVP management endpoints must remain local to the development environment.
 
 ### 2.3 Operating Environment
 
-- Frontend: React.js with TypeScript.
-- Backend: Python with FastAPI.
-- Database: SQLite.
-- API documentation and testing: FastAPI Swagger UI and/or Postman.
-- Development environment: Local development environment.
-- Final environment: Deployment or reproducible demonstration environment selected during implementation.
-
-### 2.4 Constraints
-
-- The final application must demonstrate REST APIs, authentication, authorization, RBAC, security scopes, and frontend-backend integration.
-- The initial question format will be MCQ with one correct option per question.
-- The project will avoid unnecessary technologies and features outside the course requirements.
+- Frontend: Modern web browser.
+- Frontend development server: Vite.
+- Backend runtime: Python with FastAPI.
+- Backend development server: Uvicorn.
+- Data storage: A relational database.
+- Version control: Git and GitHub.
+- Beta hosting: A suitable web hosting platform.
 
 ## 3. Functional Requirements
 
-Each requirement is assigned to the release in which it is planned to be implemented.
+Each requirement is assigned a unique ID and a release.
 
-### 3.1 Quiz Management
+### 3.1 Quiz Listing and Details
 
-- **FR-01 (MVP):** The system shall allow a quiz to be created with a title, description, and publishing status.
-- **FR-02 (MVP):** The system shall return a list of quizzes.
-- **FR-03 (MVP):** The system shall return the details of a selected quiz.
-- **FR-04 (MVP):** The system shall allow a quiz to be updated.
-- **FR-05 (MVP):** The system shall allow a quiz to be deleted.
-- **FR-06 (Beta):** The system shall allow an authorized teacher to publish or unpublish a quiz they own.
-- **FR-07 (Beta):** The system shall allow students to view published quizzes through the student-facing application.
+**FR-01 — List Quizzes (MVP)**  
+The system shall return a list of available published quizzes.
 
-### 3.2 Question and Option Management
+**FR-02 — View Quiz Details (MVP)**  
+The system shall return a quiz's title, description, and associated questions.
 
-- **FR-08 (MVP):** The system shall allow MCQ questions and answer options to be added to a quiz.
-- **FR-09 (MVP):** The system shall allow questions and options to be retrieved, updated, and deleted.
-- **FR-10 (MVP):** The system shall validate that a question belongs to the specified quiz and that an option belongs to the specified question.
-- **FR-11 (Beta):** The system shall allow only an authorized teacher to manage questions and options for a quiz they own.
+**FR-03 — Hide Answer Keys (MVP)**  
+The quiz-taking API shall not expose correct-answer information before submission.
+
+### 3.2 Quiz Management
+
+**FR-04 — Create Quiz (MVP)**  
+The system shall allow quiz creation through a REST API.
+
+**FR-05 — Update Quiz (MVP)**  
+The system shall allow an existing quiz's editable fields to be updated.
+
+**FR-06 — Delete Quiz (MVP)**  
+The system shall allow a quiz to be deleted. Related data must be handled consistently.
+
+**FR-07 — Create Question (MVP)**  
+The system shall allow an MCQ question to be added to a quiz.
+
+**FR-08 — Update Question (MVP)**  
+The system shall allow question text, options, and correct-answer configuration to be updated.
+
+**FR-09 — Delete Question (MVP)**  
+The system shall allow a question to be removed from a quiz.
 
 ### 3.3 Quiz Attempts and Results
 
-- **FR-12 (MVP):** The system shall accept selected option IDs for a quiz attempt.
-- **FR-13 (MVP):** The backend shall calculate the score by comparing submitted options with the stored correct options.
-- **FR-14 (MVP):** The system shall reject invalid quiz IDs and invalid question-option relationships.
-- **FR-15 (Beta):** The system shall store each student's quiz attempt and calculated result.
-- **FR-16 (Beta):** A student shall be able to view only their own results.
-- **FR-17 (Beta):** A teacher shall be able to view results only for quizzes they own.
-- **FR-18 (MVP/Beta):** Correct-answer information shall not be included in student-facing quiz responses before submission; the backend shall enforce this when the student-facing API is implemented.
+**FR-10 — Submit Answers (MVP)**  
+The system shall accept the quiz identifier and the participant's selected answers.
 
-### 3.4 Authentication and User Management
+**FR-11 — Calculate Score (MVP)**  
+The backend shall compare submitted answers with stored correct answers and calculate the score.
 
-- **FR-19 (Beta):** The system shall allow users to register with the required account information.
-- **FR-20 (Beta):** The system shall authenticate users and issue a JWT access token after successful login.
-- **FR-21 (Beta):** The system shall provide an endpoint for retrieving the current authenticated user's profile.
-- **FR-22 (Beta):** The system shall support Student, Teacher, and Admin roles.
-- **FR-23 (Beta):** The system shall allow an authorized admin to list users, assign roles, and activate or deactivate accounts.
-- **FR-24 (Beta):** The system shall reject missing, invalid, or expired tokens on protected endpoints.
+**FR-12 — Return Result (MVP)**  
+The system shall return the score and the number of correct answers after submission.
 
-### 3.5 Authorization, RBAC, and Security Scopes
+**FR-13 — Reject Invalid Submissions (MVP)**  
+The system shall reject invalid quiz identifiers, unknown question identifiers, and answer options that do not belong to the relevant question.
 
-- **FR-25 (Beta):** The system shall check user roles before allowing role-restricted operations.
-- **FR-26 (Beta):** The system shall check required security scopes before allowing protected operations.
-- **FR-27 (Beta):** The system shall verify quiz ownership before allowing a teacher to update or delete a quiz or manage its questions.
-- **FR-28 (Beta):** The system shall prevent non-admin users from managing user accounts or assigning roles.
-- **FR-29 (Beta):** The system shall enforce authorization on the backend and shall not rely only on hidden frontend controls.
+**FR-14 — Store Attempts (Beta)**  
+The system shall store quiz attempts with the authenticated user's ID, score, and submission time.
 
-### 3.6 Frontend and Backend Integration
+**FR-15 — View Attempt History (Beta)**  
+The system shall allow a student to view their own previous attempts.
 
-- **FR-30 (Beta):** The frontend shall provide pages for the available quiz-related operations.
-- **FR-31 (Beta):** The frontend shall provide role-appropriate views for Students, Teachers, and Admins.
-- **FR-32 (Beta):** The frontend shall display loading, empty, success, and error states where appropriate.
-- **FR-33 (Beta):** The frontend shall communicate with the FastAPI backend through REST APIs.
-- **FR-34 (Beta):** The frontend shall send authentication tokens with protected requests.
+### 3.4 Authentication and Profile
+
+**FR-16 — User Registration (Beta)**  
+The system shall allow a user to register with a name, valid email address, and password.
+
+**FR-17 — User Login (Beta)**  
+The system shall verify credentials and return an appropriate authentication response.
+
+**FR-18 — Protected Requests (Beta)**  
+The system shall require valid authentication for protected endpoints.
+
+**FR-19 — User Profile (Beta)**  
+The system shall allow an authenticated user to view their own profile.
+
+**FR-20 — User Dashboard (Beta)**  
+The system shall display the user's profile and available personal quiz statistics.
+
+### 3.5 Roles, Permissions, and Administration
+
+**FR-21 — Student/Admin Roles (Beta)**  
+The system shall support the `student` and `admin` roles.
+
+**FR-22 — Role-Based Authorization (Beta)**  
+The system shall restrict administrative actions to authorized Admin users.
+
+**FR-23 — Permission Scopes (Beta)**  
+Protected operations shall require appropriate scopes, such as `quiz:read`, `quiz:manage`, `attempt:create`, `attempt:read:own`, and `user:manage`.
+
+**FR-24 — User Management (Beta)**  
+An Admin shall be able to view users and manage their roles using protected endpoints.
+
+**FR-25 — Prevent Unauthorized Access (Beta)**  
+A user shall not be able to view another user's private profile or attempt history by changing an ID in the request.
 
 ## 4. Non-Functional Requirements
 
-- **NFR-01 (MVP):** API request and response bodies shall use JSON with consistent data structures.
-- **NFR-02 (MVP):** The backend shall return appropriate HTTP status codes.
-- **NFR-03 (MVP):** Invalid input shall be validated, and error responses shall not expose sensitive internal implementation details.
-- **NFR-04 (Beta):** Passwords shall be stored as secure hashes and never as plaintext.
-- **NFR-05 (Beta):** Authorization decisions shall be enforced on the backend for every protected request.
-- **NFR-06 (Beta):** Students shall not be able to access other students' results.
-- **NFR-07 (MVP/Beta):** The application shall separate frontend, API, business logic, and data-access responsibilities.
-- **NFR-08 (MVP/Beta):** The system shall remain practical and manageable within the course timeline.
+**NFR-01 — Usability**  
+The frontend shall provide clear labels, submission feedback, and understandable error messages.
 
-## 5. Permission Matrix (Beta)
+**NFR-02 — Performance**  
+The system shall support normal classroom demonstration workloads without unnecessary delays.
 
-| Action | Student | Teacher | Admin |
+**NFR-03 — Validation**  
+The backend shall validate request bodies, required fields, data types, and identifier values.
+
+**NFR-04 — Error Handling**  
+The API shall return suitable HTTP status codes and structured error responses.
+
+**NFR-05 — Security**  
+Beta passwords shall be stored as secure hashes. Plain-text passwords shall never be stored or returned.
+
+**NFR-06 — Authorization**  
+All protected operations shall enforce permissions on the backend; hiding a frontend button alone shall not count as authorization.
+
+**NFR-07 — Data Integrity**  
+Scores shall be calculated by the backend using stored answer keys. Client-submitted scores shall not be trusted.
+
+**NFR-08 — Maintainability**  
+API routes, data models, business logic, and frontend API calls shall be organized into understandable modules.
+
+**NFR-09 — Compatibility**  
+The application shall run in a modern browser and use JSON for API communication.
+
+**NFR-10 — Configuration**  
+Environment-specific settings and secrets shall be kept out of source code.
+
+**NFR-11 — Testing**  
+Core API operations and Beta authorization rules shall be tested before the final demonstration.
+
+**NFR-12 — Deployment**  
+The Beta release shall be deployable using documented configuration and startup instructions.
+
+## 5. External Interface Requirements
+
+### 5.1 User Interface
+
+The frontend shall provide:
+
+- A quiz listing page.
+- A quiz details and attempt interface.
+- A result display.
+- Quiz-management forms for Admin functionality.
+- Beta login and registration forms.
+- A Beta user profile and dashboard.
+- Clear loading, success, empty, and error states.
+
+### 5.2 Software Interfaces
+
+The frontend shall communicate with FastAPI through HTTP requests and JSON responses. The backend shall expose API documentation through FastAPI's OpenAPI/Swagger interface during development.
+
+### 5.3 Communication
+
+- HTTP methods: `GET`, `POST`, `PATCH`, and `DELETE`.
+- Request/response format: JSON.
+- Authentication for Beta protected routes: Bearer access token.
+- Validation errors: appropriate `4xx` status codes.
+
+## 6. REST API Requirements
+
+The following is the proposed API contract. All paths are relative to the backend host.
+
+### 6.1 MVP Endpoints
+
+| Method | Endpoint | Purpose | Release |
 |---|---|---|---|
-| View published quizzes | Yes | Yes | As required |
-| Submit a quiz attempt | Yes | No by default | No by default |
-| View own results | Yes | No by default | As required for administration |
-| Create a quiz | No | Yes | Not required by default |
-| Update/delete own quizzes | No | Yes | Not required by default |
-| Manage questions for own quizzes | No | Yes | Not required by default |
-| View results for owned quizzes | No | Yes | As required for administration |
-| List/manage user accounts | No | No | Yes |
-| Assign roles | No | No | Yes |
-| Activate/deactivate accounts | No | No | Yes |
+| GET | `/api/quizzes` | List published quizzes | MVP |
+| GET | `/api/quizzes/{quiz_id}` | Get quiz details and safe question data | MVP |
+| POST | `/api/quizzes` | Create a quiz | MVP |
+| PATCH | `/api/quizzes/{quiz_id}` | Update a quiz | MVP |
+| DELETE | `/api/quizzes/{quiz_id}` | Delete a quiz | MVP |
+| POST | `/api/quizzes/{quiz_id}/questions` | Add a question | MVP |
+| PATCH | `/api/questions/{question_id}` | Update a question | MVP |
+| DELETE | `/api/questions/{question_id}` | Delete a question | MVP |
+| POST | `/api/quizzes/{quiz_id}/submit` | Submit answers and calculate score | MVP |
+| GET | `/api/health` | Check backend availability | MVP |
 
-Administrative access to quiz content or results is not assumed unless explicitly implemented and documented.
+Quiz-management endpoints are unauthenticated only for local MVP development and must not be publicly exposed in that state.
 
-## 6. Security Scopes (Beta)
+### 6.2 Beta Endpoints
 
-The backend will define and enforce scopes such as the following:
+| Method | Endpoint | Purpose | Release |
+|---|---|---|---|
+| POST | `/api/auth/register` | Register a user | Beta |
+| POST | `/api/auth/login` | Authenticate a user | Beta |
+| GET | `/api/users/me` | View own profile | Beta |
+| PATCH | `/api/users/me` | Update own profile | Beta |
+| GET | `/api/users/me/attempts` | View own quiz history | Beta |
+| GET | `/api/users/me/dashboard` | View personal statistics | Beta |
+| GET | `/api/admin/users` | List users | Beta |
+| PATCH | `/api/admin/users/{user_id}/role` | Update a user's role | Beta |
 
-| Scope | Permission |
-|---|---|
-| `quiz:read` | Read quizzes visible to the current user. |
-| `quiz:create` | Create a quiz. |
-| `quiz:update_own` | Update a quiz owned by the current user. |
-| `quiz:delete_own` | Delete a quiz owned by the current user. |
-| `question:manage_own` | Manage questions and options for an owned quiz. |
-| `attempt:submit` | Submit a quiz attempt. |
-| `result:read_own` | Read the current user's own results. |
-| `result:read_quiz` | Read results for a quiz owned by the current user. |
-| `user:manage` | List and manage user accounts. |
-| `role:assign` | Assign or change user roles. |
-
-A scope alone does not establish resource ownership. The backend must verify both the required permission and the relevant ownership or user identity.
+Every protected Beta endpoint must authenticate the caller and check the required role and permission scope.
 
 ## 7. Data Requirements
 
-The planned data entities are:
+The application shall use a relational database with the following logical entities:
 
 ### 7.1 Quiz
-- Quiz ID
-- Title
-- Description
-- Publishing status
-- Creation timestamp
-- Owner ID (Beta)
+
+- `id`: unique identifier.
+- `title`: required quiz title.
+- `description`: optional description.
+- `is_published`: publication status.
+- `created_at`: creation timestamp.
 
 ### 7.2 Question
-- Question ID
-- Quiz ID
-- Question text
 
-### 7.3 Option
-- Option ID
-- Question ID
-- Option text
-- Correct-option indicator used by the backend
+- `id`: unique identifier.
+- `quiz_id`: reference to the associated quiz.
+- `question_text`: required question text.
+- `options`: the available answer options.
+- `correct_option`: the correct option, stored securely on the backend.
 
-### 7.4 User (Beta)
-- User ID
-- Name
-- Email
-- Password hash
-- Role
-- Account status
-- Creation timestamp
+### 7.3 User (Beta)
 
-### 7.5 Attempt (Beta)
-- Attempt ID
-- Quiz ID
-- Student ID
-- Score
-- Total questions
-- Submission timestamp
+- `id`: unique identifier.
+- `name`: display name.
+- `email`: unique email address.
+- `password_hash`: secure password hash.
+- `role`: `student` or `admin`.
+- `created_at`: account creation timestamp.
 
-### 7.6 AttemptAnswer (Beta)
-- Answer ID
-- Attempt ID
-- Question ID
-- Selected option ID
+### 7.4 Quiz Attempt (Beta)
 
-The correct-option indicator shall not be exposed in student-facing quiz responses before submission.
+- `id`: unique identifier.
+- `user_id`: reference to the student.
+- `quiz_id`: reference to the quiz.
+- `score`: backend-calculated score.
+- `total_questions`: total questions in the attempt.
+- `submitted_at`: submission timestamp.
 
-## 8. API Response and Error Requirements
+## 8. Permission Matrix — Beta
 
-| Situation | Expected HTTP Status |
+| Action | Guest | Student | Admin |
+|---|---|---|---|
+| Browse published quizzes | Allow | Allow | Allow |
+| View safe quiz details | Allow | Allow | Allow |
+| Submit quiz answers | Not allowed | Allow | Allow |
+| View own profile | Not allowed | Allow | Allow |
+| View own attempt history | Not allowed | Allow | Allow |
+| Create or edit quizzes | Not allowed | Not allowed | Allow |
+| Manage questions | Not allowed | Not allowed | Allow |
+| Manage user roles | Not allowed | Not allowed | Allow |
+| View another user's private history | Not allowed | Not allowed | Only if explicitly authorized for administration |
+
+The backend shall enforce this matrix. Beta administrative routes shall require both a valid authenticated identity and the appropriate permission scope.
+
+## 9. Validation and Error Handling
+
+| Situation | Expected response |
 |---|---|
-| Successful read or update | `200 OK` |
-| Resource created | `201 Created` |
-| Successful deletion without a response body | `204 No Content` |
-| Resource not found | `404 Not Found` |
-| Missing or invalid token | `401 Unauthorized` (Beta) |
-| Insufficient role or permission | `403 Forbidden` (Beta) |
-| Duplicate account email | `409 Conflict` (Beta) |
-| Invalid request data | `422 Unprocessable Entity` |
+| Invalid request body | `422 Unprocessable Entity` |
+| Quiz or question not found | `404 Not Found` |
+| Missing or invalid authentication token | `401 Unauthorized` |
+| Authenticated user lacks permission | `403 Forbidden` |
+| Duplicate email during registration | `409 Conflict` |
+| Successful resource creation | `201 Created` |
+| Successful read/update | `200 OK` |
+| Successful deletion with no response body | `204 No Content` |
 
-The exact response schemas will be finalized during implementation and documented in FastAPI Swagger UI.
+The exact status code for a particular error shall be consistent with the API contract. Error messages must not reveal passwords, tokens, or other secrets.
 
-## 9. Acceptance Criteria
+## 10. Acceptance Criteria
 
-### 9.1 MVP Acceptance Criteria
+### MVP Acceptance Criteria
 
-- Quiz CRUD endpoints work locally.
-- Questions and options can be managed through the API.
-- The backend calculates scores for submitted answers.
-- Invalid data and resource references return appropriate errors.
-- The endpoints can be demonstrated through Swagger UI or Postman.
+- **AC-01:** The quiz list is returned by the backend and displayed by the frontend.
+- **AC-02:** Quiz details and questions load successfully.
+- **AC-03:** Quiz and question CRUD operations work through the REST API.
+- **AC-04:** A valid answer submission returns a backend-calculated score.
+- **AC-05:** Invalid identifiers and malformed requests are handled correctly.
+- **AC-06:** Correct answers are not exposed by the quiz-taking response before submission.
+- **AC-07:** The frontend and backend run locally using documented instructions.
 
-### 9.2 Beta Acceptance Criteria
+### Beta Acceptance Criteria
 
-- Registration and login work with JWT authentication.
-- Protected endpoints reject missing or invalid tokens.
-- Role and scope restrictions are enforced on the backend.
-- Teachers cannot modify quizzes owned by other teachers.
-- Students cannot access other students' results.
-- Correct answers are not exposed before submission.
-- The React frontend communicates with the FastAPI backend.
-- Main user workflows and permission restrictions pass testing.
-- The integrated application can be demonstrated in the selected final environment.
+- **AC-08:** A user can register and log in.
+- **AC-09:** Protected routes reject unauthenticated requests.
+- **AC-10:** Students cannot use Admin-only operations.
+- **AC-11:** Protected operations check the required scopes.
+- **AC-12:** A student can view their own profile and attempt history.
+- **AC-13:** A student cannot access another user's private data by changing request identifiers.
+- **AC-14:** The deployed application can be demonstrated successfully.
 
-## 10. Out of Scope
+## 11. Constraints and Dependencies
 
-AI/ML features, LLMs, RAG, AI-generated questions, payment processing, live multiplayer competition, advanced proctoring, and complex analytics are excluded from the planned requirements.
-
-## 11. Requirements Status
-
-All requirements in this document describe the planned implementation. Their status will be updated as development and testing progress.
+- The project must use React + TypeScript and FastAPI + Python.
+- The backend shall be the source of truth for scoring and authorization.
+- Beta authentication and role-based access control must be tested before deployment.
+- All planned features must be labelled MVP or Beta.
+- Features outside the PRD's scope require instructor/team approval before implementation.
 
