@@ -1,289 +1,406 @@
 # Technical Design Document (TDD)
+## Quiz Game 
 
-## 1. Introduction
+**Document Version:** 1.0  
+**Status:** Proposed / Planning  
+**Project Type:** Solo Course Project
 
-### 1.1 Purpose
+## 1. Technical Overview
 
-This document describes the technical architecture and implementation plan for Quiz Game.
+Quiz Game will be a web application consisting of a frontend, backend, and database.
 
-### 1.2 Technology Stack
+- **Frontend:** React.js with TypeScript.
+- **Backend:** Python with FastAPI.
+- **Database:** SQLite.
+- **Communication:** REST APIs using HTTP and JSON.
+- **Security:** JWT authentication, RBAC, and security scopes.
 
-* Frontend: React.js with TypeScript
-* Backend: FastAPI with Python
-* Database: SQLite
-* API communication: REST over HTTP
-* Authentication: JWT bearer tokens
-* Password security: Password hashing using a suitable password-hashing library
-* Version control: Git and GitHub
+The MVP will focus on the core quiz REST APIs. The Beta release will add authentication, authorization, user roles, security scopes, frontend integration, and final testing or deployment.
 
 ## 2. System Architecture
 
-The application follows a client-server architecture.
+### 2.1 Architecture Diagram
 
-### Frontend
+```text
+User / Web Browser
+        |
+        v
+React.js + TypeScript Frontend
+        |
+        | HTTP Requests / JSON Responses
+        v
+FastAPI Backend
+        |
+        |-- API Routers
+        |-- Request and Response Schemas
+        |-- Business Logic and Scoring
+        |-- Authentication and Authorization (Beta)
+        |-- Data Access
+        |
+        v
+SQLite Database
+```
 
-The React application provides registration, login, quiz listing, quiz management, quiz attempts, results, and administration pages.
+### 2.2 Frontend Responsibilities
 
-### Backend
+The React frontend will:
 
-FastAPI exposes REST endpoints, validates requests, authenticates users, checks permissions, performs business logic, and communicates with the database.
+- Display role-appropriate pages and forms.
+- Allow users to interact with quizzes and results.
+- Communicate with backend endpoints through REST APIs.
+- Use TypeScript interfaces for API data.
+- Display loading indicators, success messages, and error messages.
+- Manage the user's authentication state and send tokens with protected requests.
 
-### Database
+Frontend restrictions are for usability only. Actual access control will be enforced by the backend.
 
-SQLite stores user accounts, quizzes, questions, answer options, attempts, and submitted answers.
+### 2.3 Backend Responsibilities
 
-### Request Flow
+The FastAPI backend will:
 
-1. The user interacts with the React frontend.
-2. The frontend sends an HTTP request to a FastAPI endpoint.
-3. FastAPI validates the request and authenticates the user when required.
-4. Authorization dependencies check roles and security scopes.
-5. Business logic validates resource ownership and performs the operation.
-6. The backend reads or updates the database.
-7. FastAPI returns a JSON response and an appropriate HTTP status code.
-8. React displays the result.
+- Define and expose REST API endpoints.
+- Validate incoming requests.
+- Apply quiz, question, scoring, and account business rules.
+- Read and write data in SQLite.
+- Calculate quiz scores on the server.
+- Authenticate users and validate JWTs in Beta.
+- Enforce roles, security scopes, and resource ownership in Beta.
+- Return appropriate HTTP status codes and JSON responses.
 
-## 3. Proposed Project Structure
+### 2.4 Database Responsibilities
+
+SQLite will store quiz information, questions, answer options, users, attempts, and results as required by each release. Relationships and validation rules will help maintain data integrity.
+
+## 3. Technology Stack
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| Frontend | React.js | User interface |
+| Frontend Language | TypeScript | Type-safe frontend development |
+| Backend | FastAPI | REST API development |
+| Backend Language | Python | Application logic |
+| Database | SQLite | Persistent data storage |
+| API Format | HTTP and JSON | Frontend-backend communication |
+| Authentication | JWT access tokens | User authentication |
+| Authorization | RBAC and security scopes | Permission enforcement |
+| API Testing | Swagger UI and/or Postman | Endpoint testing |
+| Deployment | To be selected | Final demonstration or hosting |
+
+Specific package versions and the deployment provider will be selected during implementation.
+
+## 4. Proposed Project Structure
 
 ```text
 quiz-game/
-├── docs/
-│   ├── PRD.md
-│   ├── SRS.md
-│   └── TDD.md
 ├── frontend/
 │   └── src/
 │       ├── components/
 │       ├── pages/
 │       ├── services/
 │       ├── types/
-│       ├── App.tsx
-│       └── main.tsx
+│       └── App.tsx
+│
 ├── backend/
-│   └── app/
-│       ├── routers/
-│       ├── models/
-│       ├── schemas/
-│       ├── services/
-│       ├── dependencies/
-│       ├── database.py
-│       ├── security.py
-│       └── main.py
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── routers/
+│   │   ├── schemas/
+│   │   ├── models/
+│   │   ├── services/
+│   │   ├── db/
+│   │   └── security/
+│   └── tests/
+│
 └── README.md
 ```
 
-## 4. Authentication Design
+**Directory purposes:**
+
+- `routers/`: Defines API endpoints.
+- `schemas/`: Defines request and response validation schemas.
+- `models/`: Defines database models.
+- `services/`: Contains business logic, including score calculation.
+- `db/`: Contains database configuration and connection logic.
+- `security/`: Contains password hashing, JWT validation, and authorization checks.
+- `services/` in the frontend: Contains centralized API request functions.
+- `types/`: Contains TypeScript interfaces and types.
+- `pages/`: Contains the main frontend pages.
+
+This is a proposed structure and may be adjusted during development.
+
+## 5. Database Design
+
+The following entities are planned. Exact database types, constraints, and ORM choices will be finalized during implementation.
+
+### 5.1 Quiz (MVP)
+
+| Field | Description |
+|---|---|
+| `id` | Primary key |
+| `title` | Quiz title |
+| `description` | Optional quiz description |
+| `is_published` | Indicates whether the quiz is published |
+| `created_at` | Creation timestamp |
+
+**Beta addition:** `owner_id`, a foreign key identifying the teacher who owns the quiz.
+
+### 5.2 Question (MVP)
+
+| Field | Description |
+|---|---|
+| `id` | Primary key |
+| `quiz_id` | Foreign key referencing `Quiz.id` |
+| `question_text` | Question text |
+
+### 5.3 Option (MVP)
+
+| Field | Description |
+|---|---|
+| `id` | Primary key |
+| `question_id` | Foreign key referencing `Question.id` |
+| `option_text` | Answer option text |
+| `is_correct` | Backend-only indicator used for score calculation |
+
+For the initial version, each question will have one correct option.
+
+### 5.4 User (Beta)
+
+| Field | Description |
+|---|---|
+| `id` | Primary key |
+| `name` | User's display name |
+| `email` | Unique login identifier |
+| `password_hash` | Securely hashed password |
+| `role` | `student`, `teacher`, or `admin` |
+| `is_active` | Indicates whether the account is active |
+| `created_at` | Account creation timestamp |
+
+### 5.5 Attempt (Beta)
+
+| Field | Description |
+|---|---|
+| `id` | Primary key |
+| `quiz_id` | Foreign key referencing `Quiz.id` |
+| `student_id` | Foreign key referencing `User.id` |
+| `score` | Score calculated by the backend |
+| `total_questions` | Number of questions included in scoring |
+| `submitted_at` | Submission timestamp |
+
+### 5.6 AttemptAnswer (Beta)
+
+| Field | Description |
+|---|---|
+| `id` | Primary key |
+| `attempt_id` | Foreign key referencing `Attempt.id` |
+| `question_id` | Foreign key referencing `Question.id` |
+| `selected_option_id` | Foreign key referencing `Option.id` |
+
+### 5.7 Data Integrity Rules
+
+- Each question must belong to an existing quiz.
+- Each option must belong to an existing question.
+- A submitted option must belong to the question being answered.
+- Each MCQ must have one correct option.
+- In Beta, each quiz must have an owner.
+- In Beta, each attempt must be associated with the authenticated student.
+- The backend must verify user identity before returning personal results.
+- Correct-option information must not be exposed in student-facing quiz responses before submission.
+
+## 6. REST API Design
+
+The proposed base path is `/api`. These endpoints describe the planned API and should be updated if the implementation changes.
+
+### 6.1 MVP Endpoints
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/api/health` | Check API availability |
+| `POST` | `/api/quizzes` | Create a quiz |
+| `GET` | `/api/quizzes` | List quizzes |
+| `GET` | `/api/quizzes/{quiz_id}` | Retrieve quiz details |
+| `PUT` | `/api/quizzes/{quiz_id}` | Update a quiz |
+| `DELETE` | `/api/quizzes/{quiz_id}` | Delete a quiz |
+| `GET` | `/api/quizzes/{quiz_id}/questions` | List questions in a quiz |
+| `POST` | `/api/quizzes/{quiz_id}/questions` | Add a question and its options |
+| `PUT` | `/api/questions/{question_id}` | Update a question and/or its options |
+| `DELETE` | `/api/questions/{question_id}` | Delete a question |
+| `POST` | `/api/quizzes/{quiz_id}/attempts` | Submit answers and calculate a score |
+
+The MVP is intended for local development and assessment. Its endpoints must not be considered production-secure until the Beta authorization controls are implemented.
+
+### 6.2 Beta Authentication Endpoints
+
+| Method | Endpoint | Purpose | Access |
+|---|---|---|---|
+| `POST` | `/api/auth/register` | Register a student account | Public |
+| `POST` | `/api/auth/token` | Authenticate and issue a JWT | Public |
+| `GET` | `/api/auth/me` | Retrieve the current user's profile | Authenticated user |
+
+Public registration will create Student accounts by default. Teacher and Admin roles will be assigned through an authorized process rather than accepting privileged roles from public registration requests.
+
+### 6.3 Beta Quiz and Result Endpoints
+
+| Method | Endpoint | Purpose | Required Access |
+|---|---|---|---|
+| `GET` | `/api/quizzes` | List quizzes visible to the user | Authenticated; filtered by role |
+| `POST` | `/api/quizzes` | Create a quiz | Teacher + `quiz:create` |
+| `PUT` | `/api/quizzes/{quiz_id}` | Update a quiz | Owning Teacher + `quiz:update_own` |
+| `DELETE` | `/api/quizzes/{quiz_id}` | Delete a quiz | Owning Teacher + `quiz:delete_own` |
+| `POST` | `/api/quizzes/{quiz_id}/questions` | Add questions/options | Owning Teacher + `question:manage_own` |
+| `POST` | `/api/quizzes/{quiz_id}/attempts` | Submit answers | Student + `attempt:submit` |
+| `GET` | `/api/results/me` | View personal results | Student + `result:read_own` |
+| `GET` | `/api/quizzes/{quiz_id}/results` | View results for an owned quiz | Owning Teacher + `result:read_quiz` |
+| `GET` | `/api/admin/users` | List user accounts | Admin + `user:manage` |
+| `PATCH` | `/api/admin/users/{user_id}/role` | Assign a user role | Admin + `role:assign` |
+| `PATCH` | `/api/admin/users/{user_id}/status` | Activate/deactivate an account | Admin + `user:manage` |
+
+Question update and delete endpoints will also apply the appropriate Beta authorization checks.
+
+## 7. Authentication and Authorization Design (Beta)
+
+### 7.1 Authentication Flow
+
+1. A user submits login credentials.
+2. The backend verifies the submitted password against the stored password hash.
+3. If the credentials are valid and the account is active, the backend issues a JWT access token with an expiration time.
+4. The frontend sends the token in the `Authorization: Bearer <token>` header when calling protected endpoints.
+5. The backend validates the token and identifies the current user before processing the request.
+
+The frontend can clear its authentication state on logout. Server-side token revocation is not planned unless required later.
+
+### 7.2 Role-Based Access Control
+
+**Student**
+- View published quizzes.
+- Submit quiz attempts.
+- View personal results.
+
+**Teacher**
+- Create quizzes.
+- Manage quizzes and questions they own.
+- View results for their own quizzes.
+
+**Admin**
+- List and manage user accounts.
+- Assign roles.
+- Activate or deactivate accounts.
+
+### 7.3 Security Scopes
+
+| Scope | Description |
+|---|---|
+| `quiz:read` | Read quizzes visible to the current user |
+| `quiz:create` | Create a quiz |
+| `quiz:update_own` | Update a quiz owned by the current user |
+| `quiz:delete_own` | Delete a quiz owned by the current user |
+| `question:manage_own` | Manage questions/options for an owned quiz |
+| `attempt:submit` | Submit a quiz attempt |
+| `result:read_own` | Read the current user's results |
+| `result:read_quiz` | Read results for an owned quiz |
+| `user:manage` | List and manage user accounts |
+| `role:assign` | Assign or change user roles |
+
+The backend will use reusable FastAPI dependencies or equivalent authorization checks to enforce roles and scopes. Resource ownership will be checked against the database; a scope alone does not establish ownership.
+
+### 7.4 Security Rules
+
+- Store passwords only as secure hashes.
+- Reject missing, invalid, or expired tokens on protected endpoints.
+- Return `401 Unauthorized` for unauthenticated requests.
+- Return `403 Forbidden` for authenticated users who lack the required permission.
+- Never trust a score, role, or answer-correctness value submitted by the frontend.
+- Do not expose correct-option indicators before a student submits the quiz.
+- Prevent students from accessing other students' results.
+- Enforce all authorization rules on the backend, even if the frontend hides restricted controls.
+
+## 8. Quiz Scoring Workflow
+
+1. Receive the quiz ID and selected option IDs.
+2. Verify that the quiz exists.
+3. Validate that every submitted question belongs to the quiz.
+4. Validate that each selected option belongs to its corresponding question.
+5. Compare submitted options with the correct options stored in the database.
+6. Calculate the score on the backend.
+7. In Beta, store the attempt and score with the authenticated student's ID.
+8. Return the score and total question count without exposing other users' private information.
+
+## 9. Error Handling
+
+| Condition | Expected HTTP Status |
+|---|---|
+| Successful read/update | `200 OK` |
+| Resource created | `201 Created` |
+| Successful deletion without response body | `204 No Content` |
+| Resource not found | `404 Not Found` |
+| Invalid request data or invalid relationships | `422 Unprocessable Entity` |
+| Missing, invalid, or expired token | `401 Unauthorized` (Beta) |
+| Insufficient role/scope or failed ownership check | `403 Forbidden` (Beta) |
+| Duplicate account email | `409 Conflict` (Beta) |
+| Unexpected server error | `500 Internal Server Error` |
+
+Unexpected errors must not expose sensitive implementation details to users.
+
+## 10. Frontend-Backend Integration (Beta)
+
+- Keep API calls in a centralized frontend service/module.
+- Define TypeScript interfaces for users, quizzes, questions, options, attempts, and results.
+- Configure the backend base URL through an environment variable.
+- Use JSON consistently for request and response bodies.
+- Send JWTs with protected requests.
+- Display loading indicators and success/error messages.
+- Use role-aware navigation while relying on backend authorization for actual security.
+- Test the frontend workflows against the running FastAPI backend.
+
+## 11. Testing Strategy
+
+### 11.1 MVP Testing
+
+- Test quiz creation, listing, retrieval, updating, and deletion.
+- Test question and option management.
+- Test valid answer submissions and backend score calculation.
+- Test invalid IDs and invalid question-option relationships.
+- Test malformed requests and expected error responses.
+- Verify that API documentation is available through Swagger UI.
+
+### 11.2 Beta Testing
+
+- Test successful and unsuccessful registration and login.
+- Test missing, invalid, and expired tokens.
+- Verify that each role can access only its permitted operations.
+- Verify that a teacher cannot modify another teacher's quiz.
+- Verify that a student cannot access another student's results.
+- Verify that correct answers are not exposed before submission.
+- Verify that the frontend handles successful responses and API errors.
+- Test the integrated application in the selected final environment.
+
+## 12. Implementation Plan
+
+### 12.1 MVP — Mid-term
+
+1. Create the FastAPI application and configure SQLite.
+2. Define quiz, question, and option schemas/models.
+3. Implement quiz CRUD endpoints.
+4. Implement question and option management.
+5. Implement answer submission and backend score calculation.
+6. Test the APIs locally using Swagger UI or Postman.
+
+### 12.2 Beta — Final
+
+1. Add the user model, registration, login, password hashing, and JWT validation.
+2. Add roles, scopes, and reusable authorization checks.
+3. Add quiz ownership and result privacy rules.
+4. Add attempt/result persistence and admin user-management endpoints.
+5. Build the React.js frontend with TypeScript.
+6. Integrate frontend pages with the FastAPI REST APIs.
+7. Run functional, integration, and permission tests.
+8. Deploy the application or prepare a reproducible final demonstration.
+
+## 13. Design Decisions and Limitations
+
+- The initial version supports MCQs with one correct option per question.
+- SQLite is selected to keep development and local testing simple.
+- The MVP prioritizes core API functionality.
+- The Beta completes the required authentication, authorization, RBAC, security scopes, and frontend-backend integration.
+- AI, ML, LLM/RAG, payment processing, live multiplayer, and advanced proctoring are excluded.
+- This document describes the proposed design and will be updated if implementation decisions materially change.
 
-1. A user submits credentials to the login endpoint.
-2. The backend verifies the credentials against the stored password hash.
-3. If valid, the backend issues a signed JWT containing the user identity and appropriate authorization claims.
-4. The frontend uses the access token when calling protected APIs.
-5. FastAPI validates the token and identifies the current user.
-6. Authorization dependencies verify the required scopes and role.
-7. Resource ownership checks are performed before accessing or modifying user-owned resources.
-
-Passwords must never be stored as plain text. Tokens must have an appropriate expiration time. JWT signing secrets must be kept outside source control.
-
-## 5. Role-Based Access Control (RBAC)
-
-### Student
-
-* View published quizzes.
-* Submit quiz attempts.
-* View personal results.
-
-### Teacher
-
-* View published quizzes.
-* Create quizzes.
-* Edit, publish, and delete owned quizzes.
-* Manage questions in owned quizzes.
-* View results for owned quizzes.
-
-### Admin
-
-* View and manage user accounts.
-* Activate or deactivate accounts.
-* Assign roles.
-* Perform authorized administrative operations.
-
-Role checks alone are not enough for all operations. The backend must also check quiz ownership and result ownership.
-
-## 6. Security Scopes and Permissions
-
-Proposed OAuth2-compatible scopes:
-
-* `quiz:read` — Read published quizzes.
-* `quiz:create` — Create quizzes.
-* `quiz:update_own` — Modify quizzes owned by the current teacher.
-* `quiz:delete_own` — Delete quizzes owned by the current teacher.
-* `attempt:submit` — Submit a quiz attempt.
-* `result:read_own` — Read the current user's results.
-* `result:read_quiz` — Read results for quizzes owned by the current teacher.
-* `user:manage` — Manage user accounts.
-* `role:assign` — Assign user roles.
-
-### Scope Assignment
-
-* Student: `quiz:read`, `attempt:submit`, `result:read_own`
-* Teacher: `quiz:read`, `quiz:create`, `quiz:update_own`, `quiz:delete_own`, `result:read_quiz`
-* Admin: `user:manage`, `role:assign`
-
-Additional scopes can be granted when needed. For example, the application may allow administrators to inspect published quizzes through `quiz:read`.
-
-In FastAPI, scopes can be declared using OAuth2 security utilities and enforced with dependencies. Scope checks must be combined with resource ownership checks. The `update_own` and `delete_own` scopes do not independently prove ownership.
-
-## 7. REST API Design
-
-### Authentication
-
-| Method | Endpoint             | Purpose                      | Access        |
-| ------ | -------------------- | ---------------------------- | ------------- |
-| POST   | `/api/auth/register` | Register a user              | Public        |
-| POST   | `/api/auth/token`    | Log in and receive a token   | Public        |
-| GET    | `/api/auth/me`       | Get current user information | Authenticated |
-
-### Quizzes
-
-| Method | Endpoint                         | Purpose                | Access        |
-| ------ | -------------------------------- | ---------------------- | ------------- |
-| GET    | `/api/quizzes`                   | List published quizzes | Authenticated |
-| GET    | `/api/quizzes/{quiz_id}`         | Get quiz details       | Authenticated |
-| POST   | `/api/quizzes`                   | Create a quiz          | Teacher       |
-| PUT    | `/api/quizzes/{quiz_id}`         | Update an owned quiz   | Teacher/owner |
-| DELETE | `/api/quizzes/{quiz_id}`         | Delete an owned quiz   | Teacher/owner |
-| POST   | `/api/quizzes/{quiz_id}/publish` | Publish an owned quiz  | Teacher/owner |
-
-### Questions
-
-| Method | Endpoint                           | Purpose           | Access        |
-| ------ | ---------------------------------- | ----------------- | ------------- |
-| POST   | `/api/quizzes/{quiz_id}/questions` | Add a question    | Teacher/owner |
-| PUT    | `/api/questions/{question_id}`     | Update a question | Teacher/owner |
-| DELETE | `/api/questions/{question_id}`     | Delete a question | Teacher/owner |
-
-### Attempts and Results
-
-| Method | Endpoint                          | Purpose           | Access        |
-| ------ | --------------------------------- | ----------------- | ------------- |
-| POST   | `/api/quizzes/{quiz_id}/attempts` | Submit answers    | Student       |
-| GET    | `/api/results/me`                 | View own results  | Student       |
-| GET    | `/api/quizzes/{quiz_id}/results`  | View quiz results | Teacher/owner |
-
-### User Administration
-
-| Method | Endpoint                            | Purpose               | Access |
-| ------ | ----------------------------------- | --------------------- | ------ |
-| GET    | `/api/admin/users`                  | List user accounts    | Admin  |
-| PATCH  | `/api/admin/users/{user_id}/status` | Change account status | Admin  |
-| PATCH  | `/api/admin/users/{user_id}/role`   | Assign a role         | Admin  |
-
-These endpoints describe the planned API. Request schemas, response schemas, and exact permission dependencies will be defined during implementation.
-
-## 8. Database Design
-
-### User
-
-Stores account details, password hashes, role, and account status.
-
-### Quiz
-
-Stores quiz information, publication status, and the ID of the teacher who owns it.
-
-### Question
-
-Stores question text and its parent quiz ID.
-
-### Option
-
-Stores answer choices and the correct-answer indicator.
-
-### Attempt
-
-Stores the student, quiz, score, and submission timestamp.
-
-### SubmittedAnswer
-
-Stores the selected option for each question in an attempt.
-
-Foreign keys will maintain relationships between related records. Database constraints and backend validation will be used where appropriate.
-
-## 9. Request and Response Handling
-
-The API will use JSON for request and response bodies, except for standard form-encoded login requests when required by the OAuth2 password-bearer flow.
-
-Common HTTP status codes:
-
-* `200 OK` — Successful read or update.
-* `201 Created` — Resource created.
-* `204 No Content` — Successful deletion.
-* `400 Bad Request` — Invalid operation.
-* `401 Unauthorized` — Missing or invalid authentication.
-* `403 Forbidden` — Insufficient permissions.
-* `404 Not Found` — Resource not found.
-* `422 Unprocessable Entity` — Request validation failure.
-
-## 10. Security Considerations
-
-* Hash passwords using an appropriate password-hashing algorithm.
-* Use signed, expiring authentication tokens.
-* Keep signing secrets and configuration outside version control.
-* Validate and authorize every protected request on the backend.
-* Do not trust roles or scores sent by the frontend.
-* Never return correct answers in the student-facing quiz response before submission.
-* Verify resource ownership before quiz edits, deletions, and result access.
-* Prevent unauthorized role escalation.
-* Return only necessary user information in API responses.
-* Use HTTPS in production.
-* Test invalid tokens, insufficient scopes, inactive accounts, and unauthorized resource access.
-
-## 11. Frontend-Backend Integration
-
-The frontend will use a centralized API service to call FastAPI endpoints.
-
-TypeScript interfaces will represent users, quizzes, questions, attempts, and results. The frontend will handle loading states, form validation, API errors, and navigation.
-
-Role-specific pages and buttons will improve usability, but the backend will remain responsible for enforcing all security rules.
-
-## 12. Testing Strategy
-
-### Authentication Tests
-
-* Successful registration and login.
-* Invalid credentials.
-* Missing, invalid, and expired tokens.
-
-### Authorization Tests
-
-* Student attempting to create a quiz.
-* Teacher editing another teacher's quiz.
-* Student accessing another student's results.
-* Non-admin attempting to assign roles.
-* Inactive user attempting to access protected endpoints.
-
-### Functional Tests
-
-* Creating and publishing a quiz.
-* Adding questions and options.
-* Submitting answers.
-* Calculating scores correctly.
-* Displaying personal results.
-
-### Integration Tests
-
-Verify that the React frontend can communicate with FastAPI and correctly handle successful responses and API errors.
-
-## 13. Implementation Plan
-
-1. Set up the repository and frontend/backend environments.
-2. Implement database models and authentication.
-3. Implement role checks, scopes, and ownership validation.
-4. Implement quiz and question management.
-5. Implement quiz attempts and score calculation.
-6. Build the React pages and connect them to REST APIs.
-7. Test functionality, permissions, and error handling.
-8. Update the documentation to reflect the final implementation.
-
-## 14. Design Constraints
-
-The project will prioritize a complete and secure core application over optional features. AI, machine learning, live multiplayer, and complex analytics are excluded from the initial implementation.
