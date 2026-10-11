@@ -1,13 +1,16 @@
 # Technical Design Document (TDD)
 ## Quiz Game
 
-**Project Name:** Quiz Game  
-**Document:** Technical Design Document  
-**Status:** Proposed Design  
-**Frontend:** React + TypeScript  
-**Backend:** FastAPI + Python  
-**Architecture:** REST API-based client-server architecture  
-**Release Plan:** MVP (Mid-term) and Beta (Final)
+| Document Information | Details |
+|---|---|
+| **Project Name** | Quiz Game |
+| **Document Type** | Technical Design Document (TDD) |
+| **Document Status** | Proposed Design |
+| **Frontend Technology** | React + TypeScript |
+| **Backend Technology** | FastAPI + Python |
+| **Architecture** | Client-Server Architecture with REST APIs |
+| **Release Plan** | MVP (Mid-term) and Beta (Final) |
+| **Implementation Status** | Planned; subject to verification against the actual codebase |
 
 ---
 
@@ -24,6 +27,8 @@ The document provides a technical blueprint for developing the application in tw
 Quiz Game is a web-based application that allows users to participate in multiple-choice quizzes and view their results. Authorized users will be able to create and manage quizzes and questions.
 
 The application will use React with TypeScript for the frontend and FastAPI with Python for the backend. The frontend and backend will communicate through REST APIs.
+
+
 
 ### 1.3 Scope
 
