@@ -1,129 +1,164 @@
 # Product Requirements Document (PRD)
+## Quiz Game
 
-## 1. Project Information
+**Document Version:** 1.0  
+**Status:** Proposed / Planning  
+**Project Type:** Solo Course Project  
+**Release Plan:** MVP (Mid-term) and Beta (Final)
 
-* **Project Name:** Quiz Game
-* **Document:** Product Requirements Document
-* **Version:** 1.0
-* **Status:** Draft
+## 1. Project Overview
 
-## 2. Product Overview
+Quiz Game is a web-based application that allows teachers to create and manage quizzes, students to attempt published quizzes and view their results, and administrators to manage user accounts and roles. The application will use React.js with TypeScript for the frontend and FastAPI with Python for the backend. REST APIs, authentication, role-based access control (RBAC), and security scopes will ensure that users can access only the operations and data they are authorized to use.
 
-Quiz Game is a secure web-based quiz platform where students can attempt quizzes and view their scores. Teachers can create and manage quizzes, while administrators can manage users and assign roles.
+## 2. Problem Statement
 
-The application will be developed using React.js with TypeScript for the frontend and FastAPI with Python for the backend. REST APIs will connect the frontend and backend.
+Managing quizzes manually can make quiz creation, answer submission, scoring, and result access less organized. Quiz Game aims to provide a simple platform that centralizes these activities while demonstrating proper REST API design, secure backend development, and frontend-backend integration.
 
-## 3. Problem Statement
+## 3. Project Objectives
 
-Students need a simple platform to take online quizzes and check their results. Teachers need a convenient way to create quizzes and manage questions. Administrators need control over user accounts and access permissions.
+- Develop a functional web-based quiz management system.
+- Implement REST APIs for quiz and question management.
+- Allow students to attempt quizzes and receive automatically calculated scores.
+- Implement authentication and authorization.
+- Apply RBAC and security scopes to restrict access to protected operations.
+- Integrate the React frontend with the FastAPI backend.
+- Keep the project practical and achievable within the course timeline.
 
-Quiz Game aims to provide these features in one secure and easy-to-use application.
+## 4. Target Users and Roles
 
-## 4. Project Objectives
+### 4.1 Student
+- View published quizzes.
+- Attempt available quizzes.
+- Submit answers.
+- View personal quiz results.
 
-* Provide secure user registration and login.
-* Allow students to attempt available quizzes.
-* Automatically calculate quiz scores.
-* Allow teachers to create, edit, publish, and manage their own quizzes.
-* Allow administrators to manage users and assign roles.
-* Demonstrate REST API integration, authentication, authorization, RBAC, and security scopes.
+### 4.2 Teacher
+- Create quizzes.
+- Add and manage questions and answer options.
+- Publish or unpublish quizzes.
+- Update or delete quizzes they own.
+- View results for their own quizzes.
 
-## 5. Target Users
+### 4.3 Admin
+- View user accounts.
+- Assign user roles.
+- Activate or deactivate user accounts.
 
-### Student
+## 5. Technology Stack
 
-A student can view published quizzes, submit answers, and view personal results.
+| Component | Technology |
+|---|---|
+| Frontend | React.js with TypeScript |
+| Backend | Python with FastAPI |
+| Communication | REST APIs using HTTP and JSON |
+| Database | SQLite |
+| Authentication | JWT-based authentication |
+| Authorization | RBAC and security scopes |
+| API documentation and testing | FastAPI Swagger UI and/or Postman |
 
-### Teacher
+## 6. Project Scope and Release Plan
 
-A teacher can create quizzes, manage questions, publish quizzes, and view results for their own quizzes.
+### 6.1 MVP — Mid-term Assessment
 
-### Administrator
+The MVP will focus on developing and testing the core backend functionality locally.
 
-An administrator can view and manage user accounts, assign roles, and oversee the platform.
+**Included features:**
 
-## 6. Functional Scope
+1. Create, retrieve, update, and delete quizzes through REST APIs.
+2. Manage quiz questions and answer options.
+3. Submit MCQ answers and calculate scores on the backend.
+4. Validate incoming request data.
+5. Store quiz-related data in SQLite.
+6. Return appropriate HTTP status codes and error responses.
+7. Test endpoints using FastAPI Swagger UI or Postman.
 
-### 6.1 Authentication
+**MVP success criteria:** The core quiz workflow can be demonstrated through working REST APIs in a local environment.
 
-* User registration and login.
-* Secure password storage.
-* Token-based authentication.
-* Logout and appropriate handling of expired tokens.
+### 6.2 Beta — Final Assessment
 
-### 6.2 Quiz Management
+The Beta release will extend the MVP into a complete web application.
 
-* Teachers can create quizzes with titles and descriptions.
-* Teachers can add multiple-choice questions and answer options.
-* Teachers can identify the correct answer.
-* Teachers can edit, publish, and manage their own quizzes.
+**Included features:**
 
-### 6.3 Quiz Participation
+1. User registration and login.
+2. Secure password hashing and JWT access-token validation.
+3. Student, Teacher, and Admin roles.
+4. Role-based access control and security scopes.
+5. Backend ownership checks for teacher-managed quizzes.
+6. Student access restricted to their own results.
+7. Teacher access restricted to results for quizzes they own.
+8. Admin functionality for managing accounts and assigning roles.
+9. React.js and TypeScript frontend integrated with FastAPI.
+10. Role-appropriate pages, forms, and navigation.
+11. Loading, success, empty, and error states in the frontend.
+12. Integration testing and a reproducible final demonstration or deployment.
 
-* Students can view published quizzes.
-* Students can submit answers to quiz questions.
-* The backend calculates the score.
-* Students can view their own submitted results.
+**Beta success criteria:** Users can use the application through the React frontend, and the backend correctly rejects requests that violate authentication, role, permission, or ownership rules.
 
-### 6.4 Administration
+## 7. Feature Priorities
 
-* Administrators can view user accounts.
-* Administrators can activate or deactivate accounts.
-* Administrators can assign permitted user roles.
+| ID | Feature | Priority | Release |
+|---|---|---|---|
+| F-01 | Quiz CRUD APIs | Must Have | MVP |
+| F-02 | Question and option management | Must Have | MVP |
+| F-03 | MCQ submission and backend scoring | Must Have | MVP |
+| F-04 | Input validation and API error handling | Must Have | MVP |
+| F-05 | SQLite persistence and API documentation | Must Have | MVP |
+| F-06 | User registration and JWT login | Must Have | Beta |
+| F-07 | Student, Teacher, and Admin roles | Must Have | Beta |
+| F-08 | Security scopes and ownership checks | Must Have | Beta |
+| F-09 | Student quiz and results pages | Must Have | Beta |
+| F-10 | Teacher quiz management and results pages | Must Have | Beta |
+| F-11 | Admin user management | Must Have | Beta |
+| F-12 | Frontend-backend integration and final testing | Must Have | Beta |
 
-### 6.5 Access Control
+## 8. User Stories
 
-* Students cannot create or modify quizzes.
-* Teachers cannot manage administrator accounts or assign roles.
-* Teachers can manage only their own quizzes.
-* Students can access only their own results.
-* Administrative actions require appropriate backend permissions.
+### MVP
 
-## 7. Non-Functional Requirements
+- **US-01:** As an API tester, I want to create and retrieve quizzes so that quiz management can be verified.
+- **US-02:** As an API tester, I want to add and update questions and answer options so that quizzes can be prepared.
+- **US-03:** As an API tester, I want to submit answers and receive a backend-calculated score.
+- **US-04:** As an API tester, I want invalid requests to return clear error responses.
 
-* The interface should be responsive and easy to use.
-* Passwords must not be stored in plain text.
-* Protected APIs must verify authentication and authorization.
-* Input data must be validated by the backend.
-* Error messages should be clear without exposing sensitive information.
-* The codebase should be modular and maintainable.
+### Beta
 
-## 8. Technology Stack
+- **US-05:** As a student, I want to view published quizzes, attempt them, and view my own results.
+- **US-06:** As a teacher, I want to manage my own quizzes and view their results.
+- **US-07:** As an admin, I want to manage user accounts and assign roles.
+- **US-08:** As a user, I want the system to restrict actions according to my role and permissions.
+- **US-09:** As a user, I want a clear frontend interface that communicates with the backend and displays useful feedback.
 
-* Frontend: React.js and TypeScript
-* Backend: FastAPI and Python
-* API style: REST
-* Authentication: OAuth2-compatible bearer token flow using JWT
-* Database: SQLite for the initial course-project implementation
-* Password hashing: A suitable password-hashing library
-* Version control: Git and GitHub
+## 9. Non-Functional Requirements
 
-## 9. Out of Scope
+- **NFR-01:** The frontend will use React.js with TypeScript, and the backend will use FastAPI with Python.
+- **NFR-02:** The application will expose core functionality through REST APIs.
+- **NFR-03:** The backend will validate incoming data and return appropriate HTTP responses.
+- **NFR-04:** Passwords will be stored as secure hashes, never as plaintext.
+- **NFR-05:** Authorization checks will be enforced on the backend.
+- **NFR-06:** Correct answers will not be exposed in student-facing quiz responses before submission.
+- **NFR-07:** Students will not be allowed to access other students' private results.
+- **NFR-08:** The system will remain small and practical enough to complete within the course timeline.
 
-The initial version will not include:
+## 10. Out of Scope
 
-* Artificial intelligence or machine learning.
-* Live multiplayer quizzes.
-* Payment systems.
-* Video calls or chat.
-* Complex analytics or recommendation systems.
+The following features are not planned for this course project:
 
-## 10. Success Criteria
-
-The project will be considered successful when:
-
-* Users can log in and receive valid authentication tokens.
-* Each role can access only its permitted features.
-* Teachers can create and publish quizzes.
-* Students can attempt published quizzes and view their own scores.
-* The backend calculates scores correctly.
-* Unauthorized requests are rejected.
-* The frontend communicates with the backend through REST APIs.
+- Artificial Intelligence or Machine Learning.
+- LLMs or Retrieval-Augmented Generation (RAG).
+- AI-generated quiz questions.
+- Live multiplayer competitions.
+- Payment processing.
+- Advanced online proctoring.
+- Complex analytics and recommendation systems.
+- A separate mobile application.
 
 ## 11. Assumptions and Constraints
 
-* The application is developed as a course project.
-* The team has limited development time.
-* The first version uses multiple-choice questions.
-* Features will be kept small enough to implement, test, and document within the course timeline.
+- The initial quiz format will be multiple-choice questions (MCQs), with one correct option per question.
+- SQLite will be used to keep the project simple and practical.
+- The MVP will focus on core REST API functionality.
+- The Beta release will complete authentication, authorization, security scopes, and frontend-backend integration.
+- Public registration will create Student accounts by default; privileged roles will be assigned through an authorized process.
+- This document describes the planned system and may be updated if implementation decisions change.
 
