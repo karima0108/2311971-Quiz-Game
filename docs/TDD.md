@@ -207,9 +207,9 @@ The following is a proposed folder structure. It should be adjusted to match the
 │   └── requirements.txt
 │
 ├── docs/
-│   ├── 01-prd.md
-│   ├── 02-srs.md
-│   └── 03-tdd.md
+│   ├── PRD.md
+│   ├── SRS.md
+│   └── TDD.md
 │
 └── README.md
 ```
@@ -261,7 +261,7 @@ Stores quiz information.
 | created_by | Foreign key | Reference to the creating user |
 | created_at | Timestamp | Creation time |
 
-**Release:** Core quiz functionality in MVP; ownership and role-based restrictions in Beta.
+**Release:** Core quiz functionality in MVP; ownership and role-based restrictions in Beta. The created_by foreign key will be enforced when the User entity is introduced in Beta. The MVP schema will be designed to support quiz creation without requiring a registered user account.
 
 ### 5.4 Question Entity
 
@@ -302,22 +302,15 @@ A detailed answer-by-answer history can be added later if required by the final 
 ### 5.6 Entity Relationships
 
 ```text
-User
- |
- | 1
- |
- |------< Quiz
- |        created_by
- |
- | 1
- |
- |------< QuizAttempt >------ Quiz
-             N                  1
-                                |
-                                | 1
-                                |
-                                v
-                             Question
+User (1) -------- (N) Quiz
+  |                   |
+  |                   |
+  |                   v
+  |                Question
+  |                (Quiz 1:N)
+  |
+  v
+QuizAttempt (N) -------- (1) Quiz
 ```
 
 Relationship summary:
@@ -352,20 +345,21 @@ The endpoint definitions below are proposed. They are not evidence that the rout
 
 | Method | Endpoint | Purpose | Release |
 |---|---|---|---|
+| GET | `/api/health` | Check backend availability | MVP |
 | GET | `/api/quizzes` | List published quizzes | MVP |
 | GET | `/api/quizzes/{quiz_id}` | Retrieve quiz details | MVP |
 | POST | `/api/quizzes` | Create a quiz | MVP |
-| PUT | `/api/quizzes/{quiz_id}` | Update a quiz | MVP |
+| PATCH | `/api/quizzes/{quiz_id}` | Update a quiz | MVP |
 | DELETE | `/api/quizzes/{quiz_id}` | Delete a quiz | MVP |
 | POST | `/api/quizzes/{quiz_id}/questions` | Add a question to a quiz | MVP |
 
-Creation, editing, and deletion endpoints will require suitable access controls. For the MVP, these may be restricted to a development or admin workflow; proper user authentication and RBAC are planned for Beta.
+Creation, editing, and deletion endpoints will require suitable access controls. For the MVP, these may be restricted to a development or admin workflow; proper user authentication and RBAC are planned for Beta. During the MVP, unauthenticated quiz management endpoints must be restricted to local development or another controlled environment and must not be exposed publicly. Authentication and role-based access control will be enforced before these operations are made available in the Beta release.
 
 ### 6.3 Question Endpoints
 
 | Method | Endpoint | Purpose | Release |
 |---|---|---|---|
-| PUT | `/api/questions/{question_id}` | Update a question | MVP |
+| PATCH | `/api/questions/{question_id}` | Update a question | MVP |
 | DELETE | `/api/questions/{question_id}` | Delete a question | MVP |
 
 These endpoints will validate the question data and verify that the target question exists.
@@ -385,6 +379,9 @@ The backend will receive the user's selected answers, compare them with the corr
 | POST | `/api/auth/register` | Register a user | Beta |
 | POST | `/api/auth/login` | Authenticate a user | Beta |
 | GET | `/api/users/me` | Retrieve the current user's profile | Beta |
+| PATCH | `/api/users/me` | Update the current user's profile | Beta |
+| GET | `/api/users/me/dashboard` | Retrieve personal dashboard statistics | Beta |
+| PATCH | `/api/admin/users/{user_id}/role` | Update a user's role | Beta |
 | GET | `/api/users/me/attempts` | Retrieve the current user's quiz history | Beta |
 | GET | `/api/admin/users` | Admin-only user listing | Beta |
 
