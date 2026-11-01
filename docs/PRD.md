@@ -45,9 +45,50 @@ The admin manages quiz content, including creating quizzes, adding questions, ed
 
 A guest can access the public quiz list and view published quiz information. Attempting quizzes and accessing personal results will follow the authentication rules defined for the Beta release.
 
-## 5. Scope and Release Plan
+## 5. User Stories
 
-### 5.1 MVP — Mid-term Demonstration
+The following user stories describe the expected interactions of different users with the Quiz Game application. Each story is assigned a release based on the planned MVP and Beta features.
+
+### 5.1 Guest User Stories
+
+- **US-01 (MVP):** As a Guest, I want to browse published quizzes so that I can see which quizzes are available.
+- **US-02 (MVP):** As a Guest, I want to view quiz details so that I can understand the quiz before attempting it.
+
+### 5.2 Student User Stories
+
+- **US-03 (MVP):** As a Student, I want to view available quizzes so that I can choose a quiz to attempt.
+- **US-04 (MVP):** As a Student, I want to view questions and answer options so that I can select my answers.
+- **US-05 (MVP):** As a Student, I want to submit my selected answers so that the system can evaluate my performance.
+- **US-06 (MVP):** As a Student, I want to see my score immediately after submission so that I can evaluate my knowledge.
+- **US-07 (Beta):** As a Student, I want to register and log in so that I can access my personal account.
+- **US-08 (Beta):** As a Student, I want to view my profile and dashboard so that I can see my personal information and quiz statistics.
+- **US-09 (Beta):** As a Student, I want to view my previous quiz attempts so that I can track my performance over time.
+- **US-10 (Beta):** As a Student, I want my quiz history to remain private so that other users cannot access my personal results.
+
+### 5.3 Admin User Stories
+
+- **US-11 (MVP):** As an Admin, I want to create quizzes so that I can provide new quiz content.
+- **US-12 (MVP):** As an Admin, I want to add questions and answer options to a quiz so that students can participate.
+- **US-13 (MVP):** As an Admin, I want to update quiz and question information so that I can correct or modify existing content.
+- **US-14 (MVP):** As an Admin, I want to delete quizzes and questions so that outdated or unnecessary content can be removed.
+- **US-15 (Beta):** As an Admin, I want to manage user accounts and roles so that users receive appropriate access permissions.
+- **US-16 (Beta):** As an Admin, I want administrative actions to be protected by role-based permissions and security scopes so that unauthorized users cannot manage quiz content.
+
+### 5.4 User Story Summary
+
+| User Story ID | User Type | Feature | Release |
+|---|---|---|---|
+| US-01–US-02 | Guest | Browse quizzes and view details | MVP |
+| US-03–US-06 | Student | Attempt quizzes and view results | MVP |
+| US-07–US-10 | Student | Authentication, dashboard, and attempt history | Beta |
+| US-11–US-14 | Admin | Quiz and question management | MVP |
+| US-15–US-16 | Admin | User management and protected permissions | Beta |
+
+These user stories represent the planned functionality of the application and are aligned with the functional requirements and release plan.
+
+## 6. Scope and Release Plan
+
+### 6.1 MVP — Mid-term Demonstration
 
 The MVP will run locally and focus on the core quiz workflow through REST APIs.
 
@@ -65,7 +106,7 @@ The MVP will run locally and focus on the core quiz workflow through REST APIs.
 
 **MVP limitation:** Authentication and production access control are not included in the MVP. Quiz-management endpoints are for local development and demonstration only and must not be exposed publicly without appropriate authorization.
 
-### 5.2 Beta — Final Demonstration
+### 6.2 Beta — Final Demonstration
 
 The Beta release will extend the MVP with:
 
@@ -80,7 +121,7 @@ The Beta release will extend the MVP with:
 - Security validation and authorization testing.
 - Deployment of the application to a suitable hosting platform.
 
-## 6. Functional Features
+## 7. Functional Features
 
 | ID | Feature | Description | Release |
 |---|---|---|---|
@@ -100,7 +141,7 @@ The Beta release will extend the MVP with:
 | F-14 | Permission Scopes | Enforce fine-grained permissions for protected operations. | Beta |
 | F-15 | Deployment | Deploy the frontend and backend for the final demo. | Beta |
 
-## 7. Non-Functional Goals
+## 8. Non-Functional Goals
 
 - **Usability:** The interface should be understandable to a first-time user.
 - **Performance:** Normal quiz-list and quiz-submission requests should respond promptly under typical demonstration workloads.
@@ -110,7 +151,7 @@ The Beta release will extend the MVP with:
 - **Compatibility:** The application should work in a modern desktop browser.
 - **Data integrity:** Quiz scores must be calculated by the backend, not trusted from client-submitted scores.
 
-## 8. Out of Scope
+## 9. Out of Scope
 
 The following features are not planned for the initial project:
 
@@ -124,7 +165,7 @@ The following features are not planned for the initial project:
 
 These exclusions keep the project manageable within the course timeline.
 
-## 9. Success Criteria
+## 10. Success Criteria
 
 The project will be considered successful when:
 
@@ -137,7 +178,7 @@ The project will be considered successful when:
 7. Automated or manual tests demonstrate that unauthorized users cannot perform protected actions.
 8. The final application can be demonstrated using the deployed environment.
 
-## 10. Assumptions and Constraints
+## 11. Assumptions and Constraints
 
 - The application is an academic project with a limited development timeline.
 - React + TypeScript and FastAPI + Python are the required technologies.
@@ -146,7 +187,7 @@ The project will be considered successful when:
 - The Admin role is responsible for quiz content management.
 - Features may be refined after instructor feedback, but every requirement must remain labelled MVP or Beta.
 
-## 11. Dependencies
+## 12. Dependencies
 
 - Python and the required backend packages.
 - Node.js and npm for the frontend.
@@ -154,7 +195,7 @@ The project will be considered successful when:
 - Git and GitHub for version control and collaboration.
 - A hosting platform for the Beta deployment.
 
-## 12. Release Summary
+## 13. Release Summary
 
 | Area | MVP | Beta |
 |---|---|---|
