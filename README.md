@@ -71,4 +71,4 @@ Every push to `main` redeploys automatically. Or deploy from your machine with `
 - **App at localhost:8000 shows an old version:** delete `frontend/dist`.
 - **Vercel build fails:** check **Build Logs** in the Vercel dashboard, and make sure `npm run build` works in `frontend/`.
 
-- Vercel preview deployment test
+- Vercel preview deployment test.
