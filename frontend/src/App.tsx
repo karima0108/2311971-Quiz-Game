@@ -15,7 +15,9 @@ type Question = {
   correct_option: number;
 };
 
-const API = "/api";
+const API = (
+  import.meta.env.VITE_API_BASE_URL || "/api"
+).replace(/\/$/, "");
 
 function App() {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);

@@ -8,6 +8,8 @@ from fastapi import (
     Request,
     status,
 )
+
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, joinedload
 
 from database import Base, engine, get_db
@@ -25,6 +27,18 @@ from schemas import (
 
 
 app = FastAPI(title="Quiz Game API")
+frontend_origins = os.getenv(
+    "FRONTEND_URL",
+    "http://localhost:5173",
+).split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[origin.strip() for origin in frontend_origins],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -35,24 +49,8 @@ Base.metadata.create_all(bind=engine)
 # =========================
 
 def check_management_access(request: Request):
-    """Allow management operations only from local development."""
-
-    host = request.client.host if request.client else ""
-
-    try:
-        is_local = ipaddress.ip_address(host).is_loopback
-    except ValueError:
-        is_local = False
-
-    if (
-        os.getenv("APP_ENV", "development") != "development"
-        or not is_local
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Management endpoints are available only in local development.",
-        )
-
+    """Temporarily allow management operations for the MVP deployment."""
+    return
 
 # =========================
 # HEALTH CHECK
