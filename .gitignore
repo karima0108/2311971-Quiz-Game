@@ -1,14 +1,22 @@
 # Python
 __pycache__/
+*.py[cod]
 .venv/
-*.pyc
+venv/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.env.*
+!.env.example
 
 # Node
 node_modules/
-frontend/dist/
+dist/
 
-# Env / tooling
-.env
-.vercel/
-.vscode/*
-!.vscode/extensions.json
+# Backup files
+* copy.*
