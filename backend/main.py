@@ -1,3 +1,4 @@
+
 import ipaddress
 import os
 
@@ -27,12 +28,29 @@ from schemas import (
 )
 
 
-app = FastAPI(title="Quiz Game API")
+# =========================
+# FASTAPI APPLICATION
+# =========================
+
+app = FastAPI(
+    title="Quiz Game API",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
+)
+
+
 @app.get("/")
 def root():
     return {
         "message": "Quiz Game API is running successfully!"
     }
+
+
+# =========================
+# CORS CONFIGURATION
+# =========================
+
 frontend_origins = os.getenv(
     "FRONTEND_URL",
     "http://localhost:5173",
@@ -40,13 +58,20 @@ frontend_origins = os.getenv(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in frontend_origins],
+    allow_origins=[
+        origin.strip()
+        for origin in frontend_origins
+    ],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Create database tables
+
+# =========================
+# DATABASE TABLE CREATION
+# =========================
+
 Base.metadata.create_all(bind=engine)
 
 
@@ -58,6 +83,7 @@ def check_management_access(request: Request):
     """Temporarily allow management operations for the MVP deployment."""
     return
 
+
 # =========================
 # HEALTH CHECK
 # =========================
@@ -67,10 +93,16 @@ def health():
     return {"status": "ok"}
 
 
+# =========================
+# DATABASE DEBUG
+# =========================
+
 @app.get("/api/debug-db")
 def debug_db(db: Session = Depends(get_db)):
     connection = db.execute(
-        text("SELECT current_database(), current_user, current_schema()")
+        text(
+            "SELECT current_database(), current_user, current_schema()"
+        )
     ).fetchone()
 
     quiz_count = db.execute(
@@ -92,7 +124,10 @@ def debug_db(db: Session = Depends(get_db)):
 # =========================
 
 # READ ALL QUIZZES
-@app.get("/api/quizzes", response_model=list[QuizPublic])
+@app.get(
+    "/api/quizzes",
+    response_model=list[QuizPublic],
+)
 def get_quizzes(db: Session = Depends(get_db)):
     return (
         db.query(Quiz)
@@ -102,7 +137,10 @@ def get_quizzes(db: Session = Depends(get_db)):
 
 
 # READ SINGLE QUIZ
-@app.get("/api/quizzes/{quiz_id}", response_model=QuizDetail)
+@app.get(
+    "/api/quizzes/{quiz_id}",
+    response_model=QuizDetail,
+)
 def get_quiz(
     quiz_id: int,
     db: Session = Depends(get_db),
@@ -239,7 +277,9 @@ def delete_quiz(
     db.delete(quiz)
     db.commit()
 
-    return {"message": "Quiz deleted successfully"}
+    return {
+        "message": "Quiz deleted successfully"
+    }
 
 
 # =========================
@@ -344,8 +384,11 @@ def update_question(
             detail="Question fields cannot be null",
         )
 
-    # Validate the final combination of options and correct answer
-    new_options = updates.get("options", question.options)
+    new_options = updates.get(
+        "options",
+        question.options,
+    )
+
     new_correct = updates.get(
         "correct_option",
         question.correct_option,
@@ -354,7 +397,10 @@ def update_question(
     if new_correct >= len(new_options):
         raise HTTPException(
             status_code=422,
-            detail="correct_option must match an existing option index",
+            detail=(
+                "correct_option must match "
+                "an existing option index"
+            ),
         )
 
     for key, value in updates.items():
@@ -390,4 +436,6 @@ def delete_question(
     db.delete(question)
     db.commit()
 
-    return {"message": "Question deleted successfully"}
+    return {
+        "message": "Question deleted successfully"
+    }
