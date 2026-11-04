@@ -1,6 +1,7 @@
 import ipaddress
 import os
 
+from sqlalchemy import text
 from fastapi import (
     Depends,
     FastAPI,
@@ -27,6 +28,11 @@ from schemas import (
 
 
 app = FastAPI(title="Quiz Game API")
+@app.get("/")
+def root():
+    return {
+        "message": "Quiz Game API is running successfully!"
+    }
 frontend_origins = os.getenv(
     "FRONTEND_URL",
     "http://localhost:5173",
@@ -59,6 +65,26 @@ def check_management_access(request: Request):
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/api/debug-db")
+def debug_db(db: Session = Depends(get_db)):
+    connection = db.execute(
+        text("SELECT current_database(), current_user, current_schema()")
+    ).fetchone()
+
+    quiz_count = db.execute(
+        text("SELECT COUNT(*) FROM public.quizzes")
+    ).scalar()
+
+    return {
+        "connection": list(connection),
+        "quiz_count": quiz_count,
+        "quizzes": [
+            {"id": q.id, "title": q.title}
+            for q in db.query(Quiz).all()
+        ],
+    }
 
 
 # =========================
