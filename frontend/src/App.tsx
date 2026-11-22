@@ -35,6 +35,7 @@ function App() {
 
   const [quizTitle, setQuizTitle] = useState("");
   const [quizDescription, setQuizDescription] = useState("");
+  const [quizIsPublished, setQuizIsPublished] = useState(true);
   const [editingQuizId, setEditingQuizId] = useState<number | null>(null);
 
   const [questionText, setQuestionText] = useState("");
@@ -110,6 +111,7 @@ function App() {
     const body = {
       title,
       description: quizDescription.trim() || null,
+      is_published: quizIsPublished,
     };
 
     setSaving(true);
@@ -127,6 +129,7 @@ function App() {
 
       setQuizTitle("");
       setQuizDescription("");
+      setQuizIsPublished(true);
       setEditingQuizId(null);
 
       await loadQuizzes();
@@ -143,6 +146,7 @@ function App() {
     setEditingQuizId(quiz.id);
     setQuizTitle(quiz.title);
     setQuizDescription(quiz.description || "");
+    setQuizIsPublished(quiz.is_published);
     setSelectedQuiz(null);
     setQuestions([]);
     clearMessages();
@@ -154,9 +158,33 @@ function App() {
     setEditingQuizId(null);
     setQuizTitle("");
     setQuizDescription("");
+    setQuizIsPublished(true);
     clearMessages();
   }
 
+  async function toggleQuizPublish(quiz: Quiz) {
+    clearMessages();
+
+    try {
+      await updateQuiz(quiz.id, {
+        title: quiz.title,
+        description: quiz.description,
+        is_published: !quiz.is_published,
+      });
+
+      setMessage(
+        quiz.is_published
+          ? "Quiz unpublished successfully!"
+          : "Quiz published successfully!"
+      );
+
+      await loadQuizzes();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not update quiz status"
+      );
+    }
+  }
   async function deleteQuiz(id: number) {
     const confirmed = window.confirm(
       "Are you sure you want to delete this quiz and all its questions?"
@@ -368,6 +396,8 @@ function App() {
       <QuizForm
         quizTitle={quizTitle}
         quizDescription={quizDescription}
+          quizIsPublished={quizIsPublished}
+          setQuizIsPublished={setQuizIsPublished}
         editingQuizId={editingQuizId}
         saving={saving}
         setQuizTitle={setQuizTitle}
@@ -383,6 +413,7 @@ function App() {
         onOpen={openQuiz}
         onEdit={startQuizEdit}
         onDelete={deleteQuiz}
+        onTogglePublish={toggleQuizPublish}
       />
 
       {user?.role === "user" && selectedQuiz && (

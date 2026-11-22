@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 
 from pydantic import (
     BaseModel,
@@ -100,6 +100,7 @@ class QuestionAdminResponse(QuestionPublic):
 class QuizCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     description: str | None = None
+    is_published: bool = False
 
     @field_validator("title")
     @classmethod
@@ -120,6 +121,7 @@ class QuizUpdate(BaseModel):
     )
 
     description: str | None = None
+    is_published: bool | None = None
 
     @field_validator("title")
     @classmethod

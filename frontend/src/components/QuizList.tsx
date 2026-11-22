@@ -1,4 +1,4 @@
-import type { Quiz } from "../types/quiz";
+﻿import type { Quiz } from "../types/quiz";
 
 interface QuizListProps {
   quizzes: Quiz[];
@@ -7,6 +7,7 @@ interface QuizListProps {
   onOpen: (quiz: Quiz) => void;
   onEdit: (quiz: Quiz) => void;
   onDelete: (id: number) => void;
+  onTogglePublish: (quiz: Quiz) => void;
 }
 
 export default function QuizList({
@@ -16,6 +17,7 @@ export default function QuizList({
   onOpen,
   onEdit,
   onDelete,
+  onTogglePublish,
 }: QuizListProps) {
   return (
     <section className="panel">
@@ -46,27 +48,41 @@ export default function QuizList({
             )}
 
             {isAdmin && (
-              <div className="actions">
-                <button type="button" onClick={() => onOpen(quiz)}>
-                  Manage Questions
-                </button>
+              <>
+                <p>
+                  Status: <strong>{quiz.is_published ? "Published" : "Unpublished"}</strong>
+                </p>
 
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={() => onEdit(quiz)}
-                >
-                  Edit
-                </button>
+                <div className="actions">
+                  <button type="button" onClick={() => onOpen(quiz)}>
+                    Manage Questions
+                  </button>
 
-                <button
-                  type="button"
-                  className="danger"
-                  onClick={() => onDelete(quiz.id)}
-                >
-                  Delete
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => onEdit(quiz)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => onTogglePublish(quiz)}
+                  >
+                    {quiz.is_published ? "Unpublish" : "Publish"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="danger"
+                    onClick={() => onDelete(quiz.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </>
             )}
           </article>
         ))}
@@ -74,4 +90,3 @@ export default function QuizList({
     </section>
   );
 }
-

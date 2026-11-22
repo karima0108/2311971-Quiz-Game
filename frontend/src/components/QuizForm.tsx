@@ -1,12 +1,14 @@
-import type { FormEvent } from "react";
+﻿import type { FormEvent } from "react";
 
 interface QuizFormProps {
   quizTitle: string;
   quizDescription: string;
+  quizIsPublished: boolean;
   editingQuizId: number | null;
   saving: boolean;
   setQuizTitle: (value: string) => void;
   setQuizDescription: (value: string) => void;
+  setQuizIsPublished: (value: boolean) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onCancel: () => void;
 }
@@ -14,10 +16,12 @@ interface QuizFormProps {
 export default function QuizForm({
   quizTitle,
   quizDescription,
+  quizIsPublished,
   editingQuizId,
   saving,
   setQuizTitle,
   setQuizDescription,
+  setQuizIsPublished,
   onSubmit,
   onCancel,
 }: QuizFormProps) {
@@ -44,6 +48,15 @@ export default function QuizForm({
             onChange={(e) => setQuizDescription(e.target.value)}
             placeholder="Enter quiz description"
           />
+        </label>
+
+        <label>
+          <input
+            type="checkbox"
+            checked={quizIsPublished}
+            onChange={(e) => setQuizIsPublished(e.target.checked)}
+          />
+          Publish quiz (visible to students)
         </label>
 
         <div className="actions">

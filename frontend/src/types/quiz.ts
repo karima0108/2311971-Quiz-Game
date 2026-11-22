@@ -1,7 +1,8 @@
-export interface Quiz {
+﻿export interface Quiz {
   id: number
   title: string
   description: string | null
+  is_published: boolean
   created_at: string
 }
 
