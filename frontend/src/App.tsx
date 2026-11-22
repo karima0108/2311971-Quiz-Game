@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+﻿import { useEffect, useState, type FormEvent } from "react";
 import type { Quiz, Question, StudentQuestion } from "./types/quiz";
 import {
   getQuizzes,
@@ -278,7 +278,7 @@ function App() {
 
   if (authLoading) {
     return (
-      <main className="app">
+      <main className={`app ${user?.role === "admin" ? "theme-admin" : "theme-student"}`}>
         <p>Checking login session...</p>
       </main>
     );
@@ -286,24 +286,35 @@ function App() {
 
   if (!isAuthenticated) {
     return (
-      <main className="app">
-        <header className="topbar">
-          <div>
-            <h1>Quiz Game</h1>
-            <p>Login to access Quiz Management</p>
+      <main className="app theme-welcome welcome-page">
+        <section className="welcome-layout">
+          <div className="welcome-content">
+            <p className="welcome-intro">Welcome to</p>
+            <h1 className="welcome-brand">Quizzy</h1>
+            <p className="welcome-tagline">
+              Learn · Play · Challenge Yourself
+            </p>
+            <p className="welcome-description">
+              Discover fun quizzes, test your knowledge, and challenge
+              yourself to learn something new every day.
+            </p>
           </div>
-        </header>
-        <LoginForm onSuccess={loadQuizzes} />
+
+          <div className="welcome-auth">
+            <LoginForm onSuccess={loadQuizzes} />
+          </div>
+        </section>
+        <footer>Quizzy · Learn something new every day</footer>
       </main>
     );
   }
 
   return (
-    <main className="app">
+    <main className={`app ${user?.role === "admin" ? "theme-admin" : "theme-student"}`}>
       <header className="topbar">
         <div>
           <h1>Quiz Game</h1>
-          <p>{user?.email} · Role: {user?.role}</p>
+          <p>{user?.email} Â· Role: {user?.role}</p>
         </div>
 
         <nav className="app-navigation">
@@ -443,12 +454,13 @@ function App() {
 
         </>
       )}
-      <footer>Quiz Game · Admin Management MVP</footer>
+      <footer>Quiz Game Â· Admin Management MVP</footer>
     </main>
   );
 }
 
 export default App;
+
 
 
 
