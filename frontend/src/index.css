@@ -183,3 +183,131 @@ footer {
     justify-content: flex-start;
   }
 }
+
+/* Student Profile */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0;
+  border-bottom: 1px solid #e9ebf5;
+  margin-bottom: 20px;
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #e9ebf5;
+  color: #30364d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.profile-header h3 {
+  margin: 0 0 6px;
+}
+
+.profile-header p {
+  margin: 0;
+  color: #687087;
+  text-transform: capitalize;
+}
+
+.profile-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.profile-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 16px;
+  background: #f7f8fc;
+  border-radius: 10px;
+}
+
+.profile-detail span {
+  color: #687087;
+  font-size: 13px;
+}
+
+.profile-detail strong {
+  color: #30364d;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .profile-details {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Student read-only quiz questions */
+.student-quiz-questions {
+  margin-top: 28px;
+  padding: 24px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e8e8f0;
+}
+
+.student-quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.student-quiz-header h2 {
+  margin: 0;
+}
+
+.student-quiz-questions > h3 {
+  margin-bottom: 18px;
+}
+
+.student-question-card {
+  padding: 18px;
+  margin-bottom: 16px;
+  border: 1px solid #e8e8f0;
+  border-radius: 12px;
+  background: #fafaff;
+}
+
+.student-question-card h3 {
+  margin-top: 0;
+  margin-bottom: 14px;
+  font-size: 16px;
+}
+
+.student-question-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.student-question-card li {
+  padding: 11px 14px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #eeeeF5;
+}
+
+@media (max-width: 600px) {
+  .student-quiz-questions {
+    padding: 16px;
+  }
+
+  .student-quiz-header {
+    align-items: flex-start;
+  }
+}
