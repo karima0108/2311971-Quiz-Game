@@ -1,4 +1,4 @@
-import type { Quiz, Question, StudentQuiz } from "../types/quiz"
+﻿import type { Quiz, Question, StudentQuiz } from "../types/quiz"
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || "/api"
@@ -139,7 +139,7 @@ export async function getQuizManagement(
 }
 
 export async function createQuiz(
-  data: { title: string; description: string | null },
+  data: { title: string; description: string | null; is_published: boolean },
 ): Promise<Quiz> {
   return apiRequest<Quiz>("/quizzes", {
     method: "POST",
@@ -149,7 +149,7 @@ export async function createQuiz(
 
 export async function updateQuiz(
   quizId: number,
-  data: { title: string; description: string | null },
+  data: { title: string; description: string | null; is_published: boolean },
 ): Promise<Quiz> {
   return apiRequest<Quiz>(`/quizzes/${quizId}`, {
     method: "PATCH",
