@@ -129,7 +129,6 @@ function App() {
 
       setQuizTitle("");
       setQuizDescription("");
-    setQuizIsPublished(true);
       setQuizIsPublished(true);
       setEditingQuizId(null);
 
