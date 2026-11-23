@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 
 from pydantic import (
     BaseModel,
@@ -100,6 +100,7 @@ class QuestionAdminResponse(QuestionPublic):
 class QuizCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     description: str | None = None
+    is_published: bool = False
 
     @field_validator("title")
     @classmethod
@@ -120,6 +121,7 @@ class QuizUpdate(BaseModel):
     )
 
     description: str | None = None
+    is_published: bool | None = None
 
     @field_validator("title")
     @classmethod
@@ -142,6 +144,7 @@ class QuizPublic(BaseModel):
     title: str
     description: str | None
     created_at: datetime
+    is_published: bool
 
 
 class QuizDetail(QuizPublic):
@@ -150,3 +153,41 @@ class QuizDetail(QuizPublic):
 
 class QuizManagementDetail(QuizPublic):
     questions: list[QuestionAdminResponse]
+
+# =========================
+# AUTHENTICATION SCHEMAS
+# =========================
+
+class LoginRequest(BaseModel):
+    email: str = Field(min_length=1)
+    password: str = Field(min_length=1)
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str = Field(min_length=1)
+    new_password: str = Field(min_length=8)
+
+    
+class SignupRequest(BaseModel):
+    email: str = Field(min_length=1)
+    password: str = Field(min_length=8)
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    email: str
+    role: str
+    is_active: bool
+    created_at: datetime
+
+class SessionResponse(BaseModel):
+    id: int
+    created_at: datetime
+    expires_at: datetime
+    is_current: bool

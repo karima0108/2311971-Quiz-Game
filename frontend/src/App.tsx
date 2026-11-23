@@ -1,28 +1,34 @@
 import { useEffect, useState, type FormEvent } from "react";
+import type { Quiz, Question, StudentQuestion } from "./types/quiz";
+import {
+  getQuizzes,
+  getQuizManagement,
+  getStudentQuiz,
+  createQuiz,
+  updateQuiz,
+  deleteQuiz as deleteQuizApi,
+  createQuestion,
+  updateQuestion,
+  deleteQuestion as deleteQuestionApi,
+} from "./services/api";
 import "./index.css";
-
-type Quiz = {
-  id: number;
-  title: string;
-  description: string | null;
-  created_at: string;
-};
-
-type Question = {
-  id: number;
-  question_text: string;
-  options: string[];
-  correct_option: number;
-};
-
-const API = (
-  import.meta.env.VITE_API_BASE_URL || "/api"
-).replace(/\/$/, "");
+import QuizForm from "./components/QuizForm";
+import QuizList from "./components/QuizList";
+import QuestionManager from "./components/QuestionManager";
+import LoginForm from "./components/LoginForm";
+import AdminManagement from "./components/AdminManagement";
+import AdminDashboard from "./components/AdminDashboard";
+import UserManagement from "./components/UserManagement";
+import StudentProfile from "./components/StudentProfile";
+import { useAuth } from "./context/AuthContext";
 
 function App() {
+  const { user, loading: authLoading, isAuthenticated, logout } = useAuth();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [activePage, setActivePage] = useState<"dashboard" | "admins" | "profile" | "admin-dashboard" | "user-management">("dashboard");
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [studentQuestions, setStudentQuestions] = useState<StudentQuestion[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -31,6 +37,7 @@ function App() {
 
   const [quizTitle, setQuizTitle] = useState("");
   const [quizDescription, setQuizDescription] = useState("");
+  const [quizIsPublished, setQuizIsPublished] = useState(true);
   const [editingQuizId, setEditingQuizId] = useState<number | null>(null);
 
   const [questionText, setQuestionText] = useState("");
@@ -38,36 +45,6 @@ function App() {
   const [correctOption, setCorrectOption] = useState(0);
   const [editingQuestionId, setEditingQuestionId] =
     useState<number | null>(null);
-
-  async function request<T>(
-    path: string,
-    options?: RequestInit
-  ): Promise<T> {
-    const response = await fetch(`${API}${path}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-      },
-    });
-
-    if (!response.ok) {
-      const data = await response.json().catch(() => null);
-      const detail = data?.detail;
-
-      const errorMessage = Array.isArray(detail)
-        ? detail.map((item: { msg?: string }) => item.msg).join(", ")
-        : detail || `Request failed: ${response.status}`;
-
-      throw new Error(errorMessage);
-    }
-
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    return response.json();
-  }
 
   function clearMessages() {
     setMessage("");
@@ -79,7 +56,7 @@ function App() {
     setError("");
 
     try {
-      const data = await request<Quiz[]>("/quizzes");
+      const data = await getQuizzes();
       setQuizzes(data);
     } catch (err) {
       setError(
@@ -99,19 +76,25 @@ function App() {
     clearMessages();
 
     try {
-      const data = await request<Quiz & { questions: Question[] }>(
-        `/quizzes/${quiz.id}/management`
-      );
+      if (user?.role === "admin") {
+        const data = await getQuizManagement(quiz.id);
 
-      setQuestions(data.questions);
-      setSelectedQuiz(data);
+        setQuestions(data.questions);
+        setStudentQuestions([]);
+        setSelectedQuiz(data);
+      } else {
+        const data = await getStudentQuiz(quiz.id);
+
+        setStudentQuestions(data.questions);
+        setQuestions([]);
+        setSelectedQuiz(data);
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Could not load questions"
       );
     }
   }
-
   useEffect(() => {
     loadQuizzes();
   }, []);
@@ -130,29 +113,25 @@ function App() {
     const body = {
       title,
       description: quizDescription.trim() || null,
+      is_published: quizIsPublished,
     };
 
     setSaving(true);
 
     try {
       if (editingQuizId !== null) {
-        await request(`/quizzes/${editingQuizId}`, {
-          method: "PATCH",
-          body: JSON.stringify(body),
-        });
+        await updateQuiz(editingQuizId, body);
 
         setMessage("Quiz updated successfully!");
       } else {
-        await request("/quizzes", {
-          method: "POST",
-          body: JSON.stringify(body),
-        });
+        await createQuiz(body);
 
         setMessage("Quiz created successfully!");
       }
 
       setQuizTitle("");
       setQuizDescription("");
+      setQuizIsPublished(true);
       setEditingQuizId(null);
 
       await loadQuizzes();
@@ -169,6 +148,7 @@ function App() {
     setEditingQuizId(quiz.id);
     setQuizTitle(quiz.title);
     setQuizDescription(quiz.description || "");
+    setQuizIsPublished(quiz.is_published);
     setSelectedQuiz(null);
     setQuestions([]);
     clearMessages();
@@ -180,9 +160,33 @@ function App() {
     setEditingQuizId(null);
     setQuizTitle("");
     setQuizDescription("");
+    setQuizIsPublished(true);
     clearMessages();
   }
 
+  async function toggleQuizPublish(quiz: Quiz) {
+    clearMessages();
+
+    try {
+      await updateQuiz(quiz.id, {
+        title: quiz.title,
+        description: quiz.description,
+        is_published: !quiz.is_published,
+      });
+
+      setMessage(
+        quiz.is_published
+          ? "Quiz unpublished successfully!"
+          : "Quiz published successfully!"
+      );
+
+      await loadQuizzes();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not update quiz status"
+      );
+    }
+  }
   async function deleteQuiz(id: number) {
     const confirmed = window.confirm(
       "Are you sure you want to delete this quiz and all its questions?"
@@ -193,7 +197,7 @@ function App() {
     clearMessages();
 
     try {
-      await request(`/quizzes/${id}`, { method: "DELETE" });
+      await deleteQuizApi(id);
 
       setMessage("Quiz deleted successfully!");
 
@@ -241,17 +245,11 @@ function App() {
 
     try {
       if (editingQuestionId !== null) {
-        await request(`/questions/${editingQuestionId}`, {
-          method: "PATCH",
-          body: JSON.stringify(body),
-        });
+        await updateQuestion(editingQuestionId, body);
 
         setMessage("Question updated successfully!");
       } else {
-        await request(`/quizzes/${selectedQuiz.id}/questions`, {
-          method: "POST",
-          body: JSON.stringify(body),
-        });
+        await createQuestion(selectedQuiz.id, body);
 
         setMessage("Question added successfully!");
       }
@@ -287,7 +285,7 @@ function App() {
     clearMessages();
 
     try {
-      await request(`/questions/${id}`, { method: "DELETE" });
+      await deleteQuestionApi(id);
 
       setMessage("Question deleted successfully!");
 
@@ -308,14 +306,95 @@ function App() {
     setCorrectOption(0);
   }
 
+  if (authLoading) {
+    return (
+      <main className={`app ${user?.role === "admin" ? "theme-admin" : "theme-student"}`}>
+        <p>Checking login session...</p>
+      </main>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <main className="app theme-welcome welcome-page">
+        <section className="welcome-layout">
+          <div className="welcome-content">
+            <p className="welcome-intro">Welcome to</p>
+            <h1 className="welcome-brand">Quizzy</h1>
+            <p className="welcome-tagline">
+              Learn Â· Play Â· Challenge Yourself
+            </p>
+            <p className="welcome-description">
+              Discover fun quizzes, test your knowledge, and challenge
+              yourself to learn something new every day.
+            </p>
+          </div>
+
+          <div className="welcome-auth">
+            <LoginForm onSuccess={loadQuizzes} />
+          </div>
+        </section>
+        <footer>Quizzy Â· Learn something new every day</footer>
+      </main>
+    );
+  }
+
   return (
-    <main className="app">
+    <main className={`app ${user?.role === "admin" ? "theme-admin" : "theme-student"}`}>
       <header className="topbar">
         <div>
           <h1>Quiz Game</h1>
-          <p>Admin Quiz and Question Management</p>
+          <p>{user?.email} Ã‚Â· Role: {user?.role}</p>
         </div>
 
+        <nav className="app-navigation">
+          <button type="button" className={activePage === "profile" ? "" : "secondary"} onClick={() => setActivePage("profile")}>My Profile</button>
+          <button
+            type="button"
+            className={activePage === "dashboard" ? "" : "secondary"}
+            onClick={() => setActivePage("dashboard")}
+          >
+            Dashboard
+          </button>
+
+          {user?.role === "admin" && (
+            <button
+              type="button"
+              className={activePage === "admin-dashboard" ? "" : "secondary"}
+              onClick={() => setActivePage("admin-dashboard")}
+            >
+              Admin Dashboard
+            </button>
+          )}
+
+          {user?.role === "admin" && (
+            <button
+              type="button"
+              className={activePage === "admins" ? "" : "secondary"}
+              onClick={() => setActivePage("admins")}
+            >
+              Admin Management
+            </button>
+          )}
+        </nav>
+
+          {user?.role === "admin" && (
+            <button
+              type="button"
+              className={activePage === "user-management" ? "" : "secondary"}
+              onClick={() => setActivePage("user-management")}
+            >
+              User Management
+            </button>
+          )}
+
+        <button
+          className="secondary"
+          type="button"
+          onClick={() => { void logout(); }}
+        >
+          Logout
+        </button>
         <button
           className="secondary"
           type="button"
@@ -326,115 +405,53 @@ function App() {
         </button>
       </header>
 
+      {activePage === "profile" ? (
+        <StudentProfile />
+      ) : activePage === "admin-dashboard" && user?.role === "admin" ? (
+        <AdminDashboard />
+      ) : activePage === "admins" && user?.role === "admin" ? (
+        <AdminManagement />
+      ) : activePage === "user-management" && user?.role === "admin" ? (
+        <UserManagement />
+      ) : (
+        <>
       {message && <div className="success">{message}</div>}
       {error && <div className="error">{error}</div>}
 
-      <section className="panel">
-        <h2>{editingQuizId !== null ? "Edit Quiz" : "Create a Quiz"}</h2>
+      {user?.role === "admin" && (
+      <QuizForm
+        quizTitle={quizTitle}
+        quizDescription={quizDescription}
+          quizIsPublished={quizIsPublished}
+          setQuizIsPublished={setQuizIsPublished}
+        editingQuizId={editingQuizId}
+        saving={saving}
+        setQuizTitle={setQuizTitle}
+        setQuizDescription={setQuizDescription}
+        onSubmit={saveQuiz}
+        onCancel={cancelQuizEdit}
+      />
+      )}
+      <QuizList
+        quizzes={quizzes}
+        loading={loading}
+        isAdmin={user?.role === "admin"}
+        onOpen={openQuiz}
+        onEdit={startQuizEdit}
+        onDelete={deleteQuiz}
+        onTogglePublish={toggleQuizPublish}
+      />
 
-        <form onSubmit={saveQuiz} className="form">
-          <label>
-            Quiz title
-            <input
-              value={quizTitle}
-              onChange={(e) => setQuizTitle(e.target.value)}
-              placeholder="Enter quiz title"
-              required
-              maxLength={200}
-            />
-          </label>
-
-          <label>
-            Description
-            <textarea
-              value={quizDescription}
-              onChange={(e) => setQuizDescription(e.target.value)}
-              placeholder="Enter quiz description"
-            />
-          </label>
-
-          <div className="actions">
-            <button type="submit" disabled={saving}>
-              {saving
-                ? "Saving..."
-                : editingQuizId !== null
-                  ? "Update Quiz"
-                  : "Create Quiz"}
-            </button>
-
-            {editingQuizId !== null && (
-              <button
-                type="button"
-                className="secondary"
-                onClick={cancelQuizEdit}
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-        </form>
-      </section>
-
-      <section className="panel">
-        <div className="section-heading">
-          <h2>All Quizzes</h2>
-          <span>{quizzes.length} quizzes</span>
-        </div>
-
-        {loading && <p>Loading quizzes...</p>}
-
-        {!loading && quizzes.length === 0 && (
-          <p>No quizzes yet. Create your first quiz above.</p>
-        )}
-
-        <div className="quiz-grid">
-          {quizzes.map((quiz) => (
-            <article className="quiz-card" key={quiz.id}>
-              <h3>{quiz.title}</h3>
-
-              <p>{quiz.description || "No description available."}</p>
-
-              <div className="actions">
-                <button type="button" onClick={() => openQuiz(quiz)}>
-                  Manage Questions
-                </button>
-
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={() => startQuizEdit(quiz)}
-                >
-                  Edit
-                </button>
-
-                <button
-                  type="button"
-                  className="danger"
-                  onClick={() => deleteQuiz(quiz.id)}
-                >
-                  Delete
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {selectedQuiz && (
-        <section className="panel">
-          <div className="section-heading">
-            <div>
-              <h2>{selectedQuiz.title}</h2>
-              <p>Manage questions for this quiz.</p>
-            </div>
-
+      {user?.role === "user" && selectedQuiz && (
+        <section className="student-quiz-questions">
+          <div className="student-quiz-header">
+            <h2>{selectedQuiz.title}</h2>
             <button
-              type="button"
               className="secondary"
+              type="button"
               onClick={() => {
                 setSelectedQuiz(null);
-                setQuestions([]);
-                cancelQuestionEdit();
+                setStudentQuestions([]);
                 clearMessages();
               }}
             >
@@ -442,120 +459,78 @@ function App() {
             </button>
           </div>
 
-          <form onSubmit={saveQuestion} className="form">
-            <h3>
-              {editingQuestionId !== null ? "Edit Question" : "Add Question"}
-            </h3>
+          <h3>Questions</h3>
 
-            <label>
-              Question
-              <textarea
-                value={questionText}
-                onChange={(e) => setQuestionText(e.target.value)}
-                placeholder="Enter your question"
-                required
-              />
-            </label>
+          {studentQuestions.length === 0 ? (
+            <p>No questions available for this quiz yet.</p>
+          ) : (
+            studentQuestions.map((question, index) => (
+              <article className="student-question-card" key={question.id}>
+                <h3>
+                  {index + 1}. {question.question_text}
+                </h3>
 
-            {options.map((option, index) => (
-              <label key={index}>
-                Option {index + 1}
-                <input
-                  value={option}
-                  onChange={(e) =>
-                    setOptions((current) =>
-                      current.map((item, i) =>
-                        i === index ? e.target.value : item
-                      )
-                    )
-                  }
-                  placeholder={`Enter option ${index + 1}`}
-                  required
-                />
-              </label>
-            ))}
-
-            <label>
-              Correct answer
-              <select
-                value={correctOption}
-                onChange={(e) => setCorrectOption(Number(e.target.value))}
-              >
-                {options.map((option, index) => (
-                  <option value={index} key={index}>
-                    Option {index + 1}: {option || "(empty)"}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className="actions">
-              <button type="submit" disabled={saving}>
-                {saving
-                  ? "Saving..."
-                  : editingQuestionId !== null
-                    ? "Update Question"
-                    : "Add Question"}
-              </button>
-
-              {editingQuestionId !== null && (
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={cancelQuestionEdit}
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-          </form>
-
-          <h3>Questions ({questions.length})</h3>
-
-          {questions.map((question, index) => (
-            <article className="question-card" key={question.id}>
-              <strong>
-                {index + 1}. {question.question_text}
-              </strong>
-
-              <ol type="A">
-                {question.options.map((option, i) => (
-                  <li key={i}>
-                    {option}
-                    {i === question.correct_option && (
-                      <strong> — Correct answer</strong>
-                    )}
-                  </li>
-                ))}
-              </ol>
-
-              <div className="actions">
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={() => startQuestionEdit(question)}
-                >
-                  Edit
-                </button>
-
-                <button
-                  type="button"
-                  className="danger"
-                  onClick={() => deleteQuestion(question.id)}
-                >
-                  Delete
-                </button>
-              </div>
-            </article>
-          ))}
-
-          {questions.length === 0 && <p>No questions added yet.</p>}
+                <ul>
+                  {question.options.map((option, optionIndex) => (
+                    <li key={optionIndex}>
+                      <strong>{String.fromCharCode(65 + optionIndex)}.</strong>{" "}
+                      {option}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))
+          )}
         </section>
       )}
 
-      <footer>Quiz Game · Admin Management MVP</footer>
+      {user?.role === "admin" && selectedQuiz && (
+        <QuestionManager
+          selectedQuiz={selectedQuiz}
+          questions={questions}
+          questionText={questionText}
+          options={options}
+          correctOption={correctOption}
+          editingQuestionId={editingQuestionId}
+          saving={saving}
+          setQuestionText={setQuestionText}
+          setOptions={setOptions}
+          setCorrectOption={setCorrectOption}
+          onSubmit={saveQuestion}
+          onCancel={cancelQuestionEdit}
+          onClose={() => {
+            setSelectedQuiz(null);
+            setQuestions([]);
+            cancelQuestionEdit();
+            clearMessages();
+          }}
+          onEdit={startQuestionEdit}
+          onDelete={deleteQuestion}
+        />
+      )}
+
+        </>
+      )}
+      <footer>Quiz Game Ã‚Â· Admin Management MVP</footer>
     </main>
   );
 }
 
 export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
