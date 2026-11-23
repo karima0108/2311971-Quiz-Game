@@ -220,3 +220,39 @@ export async function deleteAdmin(adminId: number): Promise<void> {
 }
 
 
+
+// ADMIN DASHBOARD API
+
+export interface AdminDashboardStats {
+  total_users: number
+  active_users: number
+  total_admins: number
+  total_quizzes: number
+  published_quizzes: number
+}
+
+export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
+  return apiRequest<AdminDashboardStats>("/admin/dashboard/stats")
+}
+
+// ADMIN USER MANAGEMENT API
+
+export async function getUsers(search = ""): Promise<ApiUser[]> {
+  const query = search.trim()
+    ? `?search=${encodeURIComponent(search.trim())}`
+    : ""
+
+  return apiRequest<ApiUser[]>(`/admin/users${query}`)
+}
+
+export async function updateUserStatus(
+  userId: number,
+  isActive: boolean,
+): Promise<ApiUser> {
+  return apiRequest<ApiUser>(
+    `/admin/users/${userId}/status?is_active=${isActive}`,
+    {
+      method: "PATCH",
+    },
+  )
+}

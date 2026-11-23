@@ -77,3 +77,9 @@ def health():
         "status": "ok"
     }
 
+
+from routers.admin_dashboard import router as admin_dashboard_router
+app.include_router(admin_dashboard_router)
+
+from routers.admin_users import router as admin_users_router
+app.include_router(admin_users_router)

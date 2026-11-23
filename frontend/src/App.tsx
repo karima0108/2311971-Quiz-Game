@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { Quiz, Question, StudentQuestion } from "./types/quiz";
 import {
   getQuizzes,
@@ -17,13 +17,15 @@ import QuizList from "./components/QuizList";
 import QuestionManager from "./components/QuestionManager";
 import LoginForm from "./components/LoginForm";
 import AdminManagement from "./components/AdminManagement";
+import AdminDashboard from "./components/AdminDashboard";
+import UserManagement from "./components/UserManagement";
 import StudentProfile from "./components/StudentProfile";
 import { useAuth } from "./context/AuthContext";
 
 function App() {
   const { user, loading: authLoading, isAuthenticated, logout } = useAuth();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [activePage, setActivePage] = useState<"dashboard" | "admins" | "profile">("dashboard");
+  const [activePage, setActivePage] = useState<"dashboard" | "admins" | "profile" | "admin-dashboard" | "user-management">("dashboard");
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [studentQuestions, setStudentQuestions] = useState<StudentQuestion[]>([]);
@@ -320,7 +322,7 @@ function App() {
             <p className="welcome-intro">Welcome to</p>
             <h1 className="welcome-brand">Quizzy</h1>
             <p className="welcome-tagline">
-              Learn · Play · Challenge Yourself
+              Learn Â· Play Â· Challenge Yourself
             </p>
             <p className="welcome-description">
               Discover fun quizzes, test your knowledge, and challenge
@@ -332,7 +334,7 @@ function App() {
             <LoginForm onSuccess={loadQuizzes} />
           </div>
         </section>
-        <footer>Quizzy · Learn something new every day</footer>
+        <footer>Quizzy Â· Learn something new every day</footer>
       </main>
     );
   }
@@ -342,7 +344,7 @@ function App() {
       <header className="topbar">
         <div>
           <h1>Quiz Game</h1>
-          <p>{user?.email} Â· Role: {user?.role}</p>
+          <p>{user?.email} Ã‚Â· Role: {user?.role}</p>
         </div>
 
         <nav className="app-navigation">
@@ -358,6 +360,16 @@ function App() {
           {user?.role === "admin" && (
             <button
               type="button"
+              className={activePage === "admin-dashboard" ? "" : "secondary"}
+              onClick={() => setActivePage("admin-dashboard")}
+            >
+              Admin Dashboard
+            </button>
+          )}
+
+          {user?.role === "admin" && (
+            <button
+              type="button"
               className={activePage === "admins" ? "" : "secondary"}
               onClick={() => setActivePage("admins")}
             >
@@ -365,6 +377,16 @@ function App() {
             </button>
           )}
         </nav>
+
+          {user?.role === "admin" && (
+            <button
+              type="button"
+              className={activePage === "user-management" ? "" : "secondary"}
+              onClick={() => setActivePage("user-management")}
+            >
+              User Management
+            </button>
+          )}
 
         <button
           className="secondary"
@@ -385,8 +407,12 @@ function App() {
 
       {activePage === "profile" ? (
         <StudentProfile />
+      ) : activePage === "admin-dashboard" && user?.role === "admin" ? (
+        <AdminDashboard />
       ) : activePage === "admins" && user?.role === "admin" ? (
         <AdminManagement />
+      ) : activePage === "user-management" && user?.role === "admin" ? (
+        <UserManagement />
       ) : (
         <>
       {message && <div className="success">{message}</div>}
@@ -485,12 +511,13 @@ function App() {
 
         </>
       )}
-      <footer>Quiz Game Â· Admin Management MVP</footer>
+      <footer>Quiz Game Ã‚Â· Admin Management MVP</footer>
     </main>
   );
 }
 
 export default App;
+
 
 
 
