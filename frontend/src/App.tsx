@@ -344,7 +344,7 @@ function App() {
       <header className="topbar">
         <div>
           <h1>Quiz Game</h1>
-          <p>{user?.email} Ã‚Â· Role: {user?.role}</p>
+          <p>{user?.email} · Role: {user?.role}</p>
         </div>
 
         <nav className="app-navigation">
@@ -511,7 +511,7 @@ function App() {
 
         </>
       )}
-      <footer>Quiz Game Ã‚Â· Admin Management MVP</footer>
+      <footer>Quiz Game · Admin Management MVP</footer>
     </main>
   );
 }
