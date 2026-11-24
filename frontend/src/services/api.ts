@@ -1,4 +1,5 @@
 import type { Quiz, Question, StudentQuiz } from "../types/quiz"
+import type { AttemptSubmission, AttemptResult } from "../types/attempt"
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || "/api"
@@ -262,4 +263,26 @@ export async function updateUserStatus(
       method: "PATCH",
     },
   )
+}
+
+
+
+
+// STUDENT QUIZ ATTEMPT API
+
+export async function submitQuizAttempt(
+  quizId: number,
+  submission: AttemptSubmission,
+): Promise<AttemptResult> {
+  return apiRequest<AttemptResult>(
+    `/quizzes/${quizId}/attempts`,
+    {
+      method: "POST",
+      body: JSON.stringify(submission),
+    },
+  )
+}
+
+export async function getMyAttempts(): Promise<AttemptResult[]> {
+  return apiRequest<AttemptResult[]>("/attempts/me")
 }
