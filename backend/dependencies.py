@@ -38,6 +38,13 @@ def get_current_user(
     if not user or not user.is_active:
         raise credentials_exception
 
+    # Reject banned users, including users with previously issued access tokens.
+    if user.is_banned:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account has been banned",
+        )
+
     return user
 
 
@@ -51,6 +58,7 @@ def require_admin(
         )
 
     return current_user
+
 
 def get_optional_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
@@ -67,7 +75,7 @@ def get_optional_user(
 
     user = db.query(User).filter(User.id == user_id).first()
 
-    if not user or not user.is_active:
+    if not user or not user.is_active or user.is_banned:
         return None
 
     return user
