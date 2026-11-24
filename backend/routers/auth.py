@@ -8,7 +8,14 @@ load_dotenv()
 
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+    Response,
+    Cookie,
+)
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -90,7 +97,6 @@ def signup(
     data: SignupRequest,
     db: Session = Depends(get_db)
 ):
-
     email = data.email.strip().lower()
 
     existing_user = db.query(User).filter(
@@ -132,7 +138,6 @@ def login(
     response: Response,
     db: Session = Depends(get_db)
 ):
-
     email = data.email.strip().lower()
 
     user = db.query(User).filter(
@@ -152,6 +157,13 @@ def login(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This account is inactive"
+        )
+
+    # Reject banned users during login.
+    if user.is_banned:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account has been banned"
         )
 
     access_token = create_access_token({
@@ -190,6 +202,7 @@ def get_my_profile(
 ):
     return current_user
 
+
 # =========================
 # UPDATE CURRENT USER PROFILE
 # =========================
@@ -208,6 +221,7 @@ def update_my_profile(
 
     return current_user
 
+
 # =========================
 # CHANGE PASSWORD
 # =========================
@@ -219,24 +233,24 @@ def change_password(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    # Check current password
-    if not verify_password(data.current_password, current_user.hashed_password):
+    if not verify_password(
+        data.current_password,
+        current_user.hashed_password
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect",
         )
 
-    # New password must be different
     if data.current_password == data.new_password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="New password must be different",
         )
 
-    # Update password
     current_user.hashed_password = hash_password(data.new_password)
 
-    # Revoke all active refresh sessions
+    # Revoke all active refresh sessions.
     now = datetime.now(timezone.utc)
 
     db.query(RefreshSession).filter(
@@ -247,13 +261,15 @@ def change_password(
         synchronize_session=False,
     )
 
-    # Clear refresh token cookie
+    # Clear refresh token cookie.
+    is_production = os.getenv("ENVIRONMENT") == "production"
+
     response.delete_cookie(
         key="refresh_token",
         path="/api/auth",
         httponly=True,
-        secure=os.getenv("ENVIRONMENT") == "production",
-        samesite="none" if os.getenv("ENVIRONMENT") == "production" else "lax",
+        secure=is_production,
+        samesite="none" if is_production else "lax",
     )
 
     db.commit()
@@ -261,10 +277,6 @@ def change_password(
     return {
         "message": "Password changed successfully. Please log in again."
     }
-
-
-
-from fastapi import Cookie
 
 
 # =========================
@@ -306,6 +318,11 @@ def refresh_access_token(
         session.revoked_at = now
         db.commit()
 
+        response.delete_cookie(
+            key="refresh_token",
+            path="/api/auth"
+        )
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token expired"
@@ -327,6 +344,21 @@ def refresh_access_token(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User is inactive or unavailable"
+        )
+
+    # Reject banned users and revoke their refresh session.
+    if user.is_banned:
+        session.revoked_at = now
+        db.commit()
+
+        response.delete_cookie(
+            key="refresh_token",
+            path="/api/auth"
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account has been banned"
         )
 
     # Generate a replacement refresh token.
@@ -359,6 +391,7 @@ def refresh_access_token(
         "access_token": access_token,
         "token_type": "bearer"
     }
+
 
 # =========================
 # USER LOGOUT
@@ -395,6 +428,7 @@ def logout(
         "message": "Logged out successfully"
     }
 
+
 # =========================
 # ACTIVE USER SESSIONS
 # =========================
@@ -429,7 +463,6 @@ def get_active_sessions(
     ]
 
 
- 
 # =========================
 # REVOKE A SPECIFIC SESSION
 # =========================
@@ -457,17 +490,20 @@ def revoke_session(
     session.revoked_at = datetime.now(timezone.utc)
 
     if refresh_token and session.token_hash == hash_refresh_token(refresh_token):
+        is_production = os.getenv("ENVIRONMENT") == "production"
+
         response.delete_cookie(
             key="refresh_token",
             path="/api/auth",
             httponly=True,
-            secure=os.getenv("ENVIRONMENT") == "production",
-            samesite="none" if os.getenv("ENVIRONMENT") == "production" else "lax",
+            secure=is_production,
+            samesite="none" if is_production else "lax",
         )
 
     db.commit()
 
     return {"message": "Session revoked successfully"}
+
 
 # =========================
 # REVOKE ALL ACTIVE SESSIONS
@@ -489,17 +525,24 @@ def revoke_all_sessions(
         synchronize_session=False,
     )
 
+    is_production = os.getenv("ENVIRONMENT") == "production"
+
     response.delete_cookie(
         key="refresh_token",
         path="/api/auth",
         httponly=True,
-        secure=os.getenv("ENVIRONMENT") == "production",
-        samesite="none" if os.getenv("ENVIRONMENT") == "production" else "lax",
+        secure=is_production,
+        samesite="none" if is_production else "lax",
     )
 
     db.commit()
 
     return {"message": "All sessions revoked successfully"}
+
+
+# =========================
+# DEMO LOGIN
+# =========================
 
 @router.post("/demo-login/{role}", response_model=TokenResponse)
 def demo_login(
@@ -508,20 +551,34 @@ def demo_login(
     db: Session = Depends(get_db),
 ):
     if role not in ("admin", "user"):
-        raise HTTPException(status_code=404, detail="Demo role not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Demo role not found"
+        )
 
     prefix = "DEMO_ADMIN" if role == "admin" else "DEMO_USER"
+
     email = os.getenv(f"{prefix}_EMAIL", "").strip().lower()
     password = os.getenv(f"{prefix}_PASSWORD", "")
 
     if not email or not password:
-        raise HTTPException(status_code=503, detail="Demo login is not configured")
+        raise HTTPException(
+            status_code=503,
+            detail="Demo login is not configured"
+        )
 
-    user = db.query(User).filter(User.email == email).first()
+    user = db.query(User).filter(
+        User.email == email
+    ).first()
+
     if not user or user.role != role:
-        raise HTTPException(status_code=503, detail="Demo account configuration is invalid")
+        raise HTTPException(
+            status_code=503,
+            detail="Demo account configuration is invalid"
+        )
 
-    return login(LoginRequest(email=email, password=password), response, db)
-
-
-
+    return login(
+        LoginRequest(email=email, password=password),
+        response,
+        db
+    )

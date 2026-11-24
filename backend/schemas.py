@@ -177,6 +177,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -185,7 +186,12 @@ class UserResponse(BaseModel):
     name: str | None = None
     role: str
     is_active: bool
+    is_banned: bool = False
+    ban_reason: str | None = None
+    banned_at: datetime | None = None
+    banned_by: int | None = None
     created_at: datetime
+
 
 class UserProfileUpdate(BaseModel):
     name: str | None = Field(default=None, max_length=100)

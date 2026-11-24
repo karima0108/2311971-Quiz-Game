@@ -49,6 +49,16 @@ class User(Base):
     role = Column(String(20), nullable=False, default="user")
     is_active = Column(Boolean, default=True, nullable=False)
 
+    # Ban management
+    is_banned = Column(Boolean, default=False, nullable=False)
+    ban_reason = Column(Text, nullable=True)
+    banned_at = Column(DateTime(timezone=True), nullable=True)
+    banned_by = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

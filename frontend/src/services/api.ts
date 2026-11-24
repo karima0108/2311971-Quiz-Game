@@ -1,3 +1,4 @@
+
 import type { Quiz, Question, StudentQuiz } from "../types/quiz"
 import type { AttemptSubmission, AttemptResult } from "../types/attempt"
 
@@ -13,6 +14,10 @@ export interface ApiUser {
   name: string | null
   role: string
   is_active: boolean
+  is_banned: boolean
+  ban_reason: string | null
+  banned_at: string | null
+  banned_by: number | null
   created_at: string
 }
 
@@ -74,7 +79,9 @@ export async function apiRequest<T>(
   return responseData as T
 }
 
+// =========================
 // AUTHENTICATION API
+// =========================
 
 export async function signup(
   email: string,
@@ -86,13 +93,17 @@ export async function signup(
   })
 }
 
-export async function demoLogin(role: "admin" | "user"): Promise<AuthResponse> {
+export async function demoLogin(
+  role: "admin" | "user",
+): Promise<AuthResponse> {
   const data = await apiRequest<AuthResponse>(`/auth/demo-login/${role}`, {
     method: "POST",
   })
+
   setAccessToken(data.access_token)
   return data
 }
+
 export async function login(
   email: string,
   password: string,
@@ -103,7 +114,6 @@ export async function login(
   })
 
   setAccessToken(data.access_token)
-
   return data
 }
 
@@ -113,7 +123,6 @@ export async function refreshAccessToken(): Promise<string> {
   })
 
   setAccessToken(data.access_token)
-
   return data.access_token
 }
 
@@ -151,13 +160,17 @@ export async function logout(): Promise<void> {
   setAccessToken(null)
 }
 
+// =========================
 // QUIZ API
+// =========================
 
 export async function getQuizzes(): Promise<Quiz[]> {
   return apiRequest<Quiz[]>("/quizzes")
 }
 
-export async function getStudentQuiz(quizId: number): Promise<StudentQuiz> {
+export async function getStudentQuiz(
+  quizId: number,
+): Promise<StudentQuiz> {
   return apiRequest<StudentQuiz>(`/quizzes/${quizId}`)
 }
 
@@ -170,7 +183,11 @@ export async function getQuizManagement(
 }
 
 export async function createQuiz(
-  data: { title: string; description: string | null; is_published: boolean },
+  data: {
+    title: string
+    description: string | null
+    is_published: boolean
+  },
 ): Promise<Quiz> {
   return apiRequest<Quiz>("/quizzes", {
     method: "POST",
@@ -180,7 +197,11 @@ export async function createQuiz(
 
 export async function updateQuiz(
   quizId: number,
-  data: { title: string; description: string | null; is_published: boolean },
+  data: {
+    title: string
+    description: string | null
+    is_published: boolean
+  },
 ): Promise<Quiz> {
   return apiRequest<Quiz>(`/quizzes/${quizId}`, {
     method: "PATCH",
@@ -194,7 +215,9 @@ export async function deleteQuiz(quizId: number): Promise<void> {
   })
 }
 
+// =========================
 // QUESTION API
+// =========================
 
 export interface QuestionInput {
   question_text: string
@@ -228,7 +251,9 @@ export async function deleteQuestion(questionId: number): Promise<void> {
   })
 }
 
- // ADMIN MANAGEMENT API
+// =========================
+// ADMIN MANAGEMENT API
+// =========================
 
 export async function getAdmins(): Promise<ApiUser[]> {
   return apiRequest<ApiUser[]>("/admins")
@@ -250,9 +275,9 @@ export async function deleteAdmin(adminId: number): Promise<void> {
   })
 }
 
-
-
+// =========================
 // ADMIN DASHBOARD API
+// =========================
 
 export interface AdminDashboardStats {
   total_users: number
@@ -266,7 +291,9 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
   return apiRequest<AdminDashboardStats>("/admin/dashboard/stats")
 }
 
+// =========================
 // ADMIN USER MANAGEMENT API
+// =========================
 
 export async function getUsers(search = ""): Promise<ApiUser[]> {
   const query = search.trim()
@@ -288,10 +315,39 @@ export async function updateUserStatus(
   )
 }
 
+// Ban a user with a reason.
+export async function banUser(
+  userId: number,
+  reason: string,
+): Promise<ApiUser> {
+  return apiRequest<ApiUser>(`/admin/users/${userId}/ban`, {
+    method: "PATCH",
+    body: JSON.stringify({ reason }),
+  })
+}
 
+// Unban a previously banned user.
+export async function unbanUser(
+  userId: number,
+): Promise<ApiUser> {
+  return apiRequest<ApiUser>(`/admin/users/${userId}/unban`, {
+    method: "PATCH",
+  })
+}
 
-
+// Change a user's role.
+export async function changeUserRole(
+  userId: number,
+  role: "user" | "admin",
+): Promise<ApiUser> {
+  return apiRequest<ApiUser>(`/admin/users/${userId}/role`, {
+    method: "PATCH",
+    body: JSON.stringify({ role }),
+  })
+}
+// =========================
 // STUDENT QUIZ ATTEMPT API
+// =========================
 
 export async function submitQuizAttempt(
   quizId: number,
