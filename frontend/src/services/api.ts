@@ -10,6 +10,7 @@ let accessToken: string | null = null
 export interface ApiUser {
   id: number
   email: string
+  name: string | null
   role: string
   is_active: boolean
   created_at: string
@@ -118,6 +119,28 @@ export async function refreshAccessToken(): Promise<string> {
 
 export async function getCurrentUser(): Promise<ApiUser> {
   return apiRequest<ApiUser>("/auth/me")
+}
+
+export async function updateMyProfile(
+  name: string,
+): Promise<ApiUser> {
+  return apiRequest<ApiUser>("/auth/me", {
+    method: "PUT",
+    body: JSON.stringify({ name }),
+  })
+}
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ message: string }> {
+  return apiRequest<{ message: string }>("/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  })
 }
 
 export async function logout(): Promise<void> {

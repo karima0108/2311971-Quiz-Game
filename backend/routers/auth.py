@@ -17,6 +17,7 @@ from schemas import (
     LoginRequest,
     SignupRequest,
     PasswordChangeRequest,
+    UserProfileUpdate,
     TokenResponse,
     UserResponse,
     SessionResponse,
@@ -189,6 +190,23 @@ def get_my_profile(
 ):
     return current_user
 
+# =========================
+# UPDATE CURRENT USER PROFILE
+# =========================
+
+@router.put("/me", response_model=UserResponse)
+def update_my_profile(
+    data: UserProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if data.name is not None:
+        current_user.name = data.name.strip() or None
+
+    db.commit()
+    db.refresh(current_user)
+
+    return current_user
 
 # =========================
 # CHANGE PASSWORD
