@@ -7,7 +7,14 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from database import Base, get_db
-from models import User, Quiz, Question
+from models import (
+    User,
+    Quiz,
+    Question,
+    Group,
+    GroupMembership,
+    GroupPermission,
+)
 from jwt_handler import create_access_token
 
 from routers.auth import router as auth_router
@@ -16,6 +23,8 @@ from routers.admin import router as admin_router
 from routers.admin_dashboard import router as admin_dashboard_router
 from routers.admin_users import router as admin_users_router
 from routers.attempts import router as attempts_router
+from routers.groups import router as groups_router
+from routers.groups import student_router
 
 
 @pytest.fixture
@@ -54,6 +63,8 @@ def app(db_session):
     test_app.include_router(admin_dashboard_router)
     test_app.include_router(admin_users_router)
     test_app.include_router(attempts_router)
+    test_app.include_router(groups_router)
+    test_app.include_router(student_router)
 
     def override_get_db():
         yield db_session
