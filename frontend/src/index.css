@@ -548,7 +548,7 @@ body:has(.app.theme-student) {
 /* More visible pastel colors */
 
 body:has(.app.theme-welcome) {
-  background: #EEE3FA;
+  background: #E2D5F2;
 }
 
 body:has(.app.theme-admin) {

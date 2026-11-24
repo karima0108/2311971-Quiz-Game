@@ -1,7 +1,10 @@
-
+﻿
 import hashlib
 import secrets
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from datetime import datetime, timedelta, timezone
 
@@ -479,3 +482,28 @@ def revoke_all_sessions(
     db.commit()
 
     return {"message": "All sessions revoked successfully"}
+
+@router.post("/demo-login/{role}", response_model=TokenResponse)
+def demo_login(
+    role: str,
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    if role not in ("admin", "user"):
+        raise HTTPException(status_code=404, detail="Demo role not found")
+
+    prefix = "DEMO_ADMIN" if role == "admin" else "DEMO_USER"
+    email = os.getenv(f"{prefix}_EMAIL", "").strip().lower()
+    password = os.getenv(f"{prefix}_PASSWORD", "")
+
+    if not email or not password:
+        raise HTTPException(status_code=503, detail="Demo login is not configured")
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != role:
+        raise HTTPException(status_code=503, detail="Demo account configuration is invalid")
+
+    return login(LoginRequest(email=email, password=password), response, db)
+
+
+

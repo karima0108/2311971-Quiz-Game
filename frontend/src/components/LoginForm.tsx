@@ -1,4 +1,4 @@
-﻿import { useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useAuth } from "../context/AuthContext";
 
 interface LoginFormProps {
@@ -6,7 +6,7 @@ interface LoginFormProps {
 }
 
 function LoginForm({ onSuccess }: LoginFormProps) {
-  const { login, signup } = useAuth();
+  const { login, signup, demoLogin } = useAuth();
 
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
@@ -40,6 +40,22 @@ function LoginForm({ onSuccess }: LoginFormProps) {
     }
   }
 
+  async function handleDemoLogin(role: "admin" | "user") {
+    setError("");
+    setMessage("");
+    setLoading(true);
+
+    try {
+      await demoLogin(role);
+      onSuccess();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Demo login failed."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <section className="panel">
       <h2>{mode === "login" ? "Login" : "Create Account"}</h2>
@@ -85,6 +101,28 @@ function LoginForm({ onSuccess }: LoginFormProps) {
               : "Create Account"}
         </button>
       </form>
+
+      {mode === "login" && (
+        <div className="demo-login-buttons">
+          <p>Try the application:</p>
+          <button
+            type="button"
+            className="secondary"
+            disabled={loading}
+            onClick={() => handleDemoLogin("admin")}
+          >
+            Demo Admin Login
+          </button>
+          <button
+            type="button"
+            className="secondary"
+            disabled={loading}
+            onClick={() => handleDemoLogin("user")}
+          >
+            Demo User Login
+          </button>
+        </div>
+      )}
 
       <p>
         {mode === "login"
