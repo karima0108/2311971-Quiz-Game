@@ -714,3 +714,229 @@ body:has(.app.theme-student) {
     padding: 25px 20px;
   }
 }
+
+/* ==================================
+   WELCOME PAGE - LAVENDER REDESIGN
+================================== */
+
+.app.theme-welcome.welcome-page {
+  width: min(1240px, 100%);
+  padding: 35px 24px;
+  margin: 0 auto;
+}
+
+.theme-welcome .welcome-layout {
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 48px;
+  min-height: 600px;
+  padding: 64px;
+  background: linear-gradient(135deg, #F8F4FD 0%, #E8DDF6 100%);
+  border: 1px solid #DCCBED;
+  border-radius: 30px;
+  box-shadow: 0 20px 55px rgba(105, 78, 145, 0.15);
+}
+
+.theme-welcome .welcome-content {
+  padding: 15px;
+}
+
+.theme-welcome .welcome-intro {
+  color: #76658D;
+  font-size: 25px;
+  font-weight: 600;
+}
+
+.theme-welcome .welcome-brand {
+  color: #72529D;
+  font-size: clamp(72px, 8vw, 108px);
+  letter-spacing: -5px;
+  text-shadow: 0 5px 18px rgba(114, 82, 157, 0.12);
+}
+
+.theme-welcome .welcome-tagline {
+  color: #765D96;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.theme-welcome .welcome-description {
+  max-width: 410px;
+  color: #6D627B;
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.theme-welcome .welcome-auth {
+  max-width: 430px;
+}
+
+.theme-welcome .welcome-auth .panel {
+  padding: 38px;
+  background: #FFFFFF;
+  border: 1px solid #E9DFF3;
+  border-radius: 24px;
+  box-shadow: 0 16px 42px rgba(92, 68, 125, 0.13);
+}
+
+.theme-welcome .welcome-auth .panel h2 {
+  color: #594477;
+  font-size: 29px;
+  margin-bottom: 8px;
+}
+
+.theme-welcome .welcome-auth .panel > p {
+  color: #81758F;
+  font-size: 14px;
+}
+
+.theme-welcome .welcome-auth .form {
+  gap: 19px;
+}
+
+.theme-welcome .welcome-auth .form label {
+  color: #57496B;
+  font-weight: 600;
+  gap: 8px;
+}
+
+.theme-welcome .welcome-auth input {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid #DED2EC;
+  border-radius: 11px;
+  background: #FCFAFE;
+  color: #403354;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.theme-welcome .welcome-auth input:focus {
+  border-color: #A98BD8;
+  box-shadow: 0 0 0 3px rgba(169, 139, 216, 0.16);
+}
+
+.theme-welcome .welcome-auth .form button[type="submit"] {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 11px;
+  background: #9875C9;
+  color: #FFFFFF;
+  font-weight: 700;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.theme-welcome .welcome-auth .form button[type="submit"]:hover {
+  background: #805CB4;
+  transform: translateY(-1px);
+}
+
+.theme-welcome .demo-login-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 22px 0;
+}
+
+.theme-welcome .demo-login-buttons p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #76658D;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.theme-welcome .demo-login-buttons button {
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 1px solid #D8C7EE;
+  border-radius: 10px;
+  background: #F4EFFA;
+  color: #694D91;
+  font-size: 13px;
+  font-weight: 650;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.theme-welcome .demo-login-buttons button:hover {
+  background: #E8DDF6;
+  border-color: #B99DDC;
+}
+
+.theme-welcome .welcome-auth .panel > p:last-child {
+  text-align: center;
+  font-size: 13px;
+}
+
+.theme-welcome .welcome-auth .panel > p:last-child button {
+  color: #805CB4;
+  font-weight: 700;
+}
+
+.theme-welcome.welcome-page footer {
+  color: #78678E;
+  font-size: 13px;
+  text-align: center;
+  padding-top: 22px;
+}
+
+@media (max-width: 760px) {
+  .app.theme-welcome.welcome-page {
+    padding: 18px 12px;
+  }
+
+  .theme-welcome .welcome-layout {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    padding: 28px 18px;
+    border-radius: 22px;
+  }
+
+  .theme-welcome .welcome-content {
+    padding: 8px;
+  }
+
+  .theme-welcome .welcome-brand {
+    font-size: 68px;
+  }
+
+  .theme-welcome .welcome-auth .panel {
+    padding: 26px 20px;
+  }
+
+  .theme-welcome .demo-login-buttons {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==================================
+   ADMIN & STUDENT SOLID BUTTON THEMES
+================================== */
+
+/* Admin - Pink buttons */
+.app.theme-admin button:not(.danger) {
+  background: #E88EAD;
+  border: 1.5px solid #E88EAD;
+  color: #FFFFFF;
+  box-shadow: 0 3px 10px rgba(210, 110, 145, 0.20);
+}
+
+.app.theme-admin button:not(.danger):hover:not(:disabled) {
+  background: #D76F96;
+  border-color: #D76F96;
+  color: #FFFFFF;
+}
+
+/* Student - Blue buttons */
+.app.theme-student button:not(.danger) {
+  background: #6FA8DC;
+  border: 1.5px solid #6FA8DC;
+  color: #FFFFFF;
+  box-shadow: 0 3px 10px rgba(85, 145, 200, 0.20);
+}
+
+.app.theme-student button:not(.danger):hover:not(:disabled) {
+  background: #508FCB;
+  border-color: #508FCB;
+  color: #FFFFFF;
+}
+
