@@ -322,7 +322,7 @@ function App() {
             <p className="welcome-intro">Welcome to</p>
             <h1 className="welcome-brand">Quizzy</h1>
             <p className="welcome-tagline">
-              Learn Â· Play Â· Challenge Yourself
+              Learn · Play · Challenge Yourself
             </p>
             <p className="welcome-description">
               Discover fun quizzes, test your knowledge, and challenge
@@ -334,7 +334,7 @@ function App() {
             <LoginForm onSuccess={loadQuizzes} />
           </div>
         </section>
-        <footer>Quizzy Â· Learn something new every day</footer>
+        <footer>Quizzy · Learn something new every day</footer>
       </main>
     );
   }

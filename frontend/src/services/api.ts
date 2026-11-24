@@ -1,4 +1,4 @@
-﻿import type { Quiz, Question, StudentQuiz } from "../types/quiz"
+import type { Quiz, Question, StudentQuiz } from "../types/quiz"
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || "/api"
@@ -84,6 +84,13 @@ export async function signup(
   })
 }
 
+export async function demoLogin(role: "admin" | "user"): Promise<AuthResponse> {
+  const data = await apiRequest<AuthResponse>(`/auth/demo-login/${role}`, {
+    method: "POST",
+  })
+  setAccessToken(data.access_token)
+  return data
+}
 export async function login(
   email: string,
   password: string,

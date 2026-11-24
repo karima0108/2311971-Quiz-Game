@@ -9,6 +9,7 @@ import {
 import {
   signup as apiSignup,
   login as apiLogin,
+  demoLogin as apiDemoLogin,
   logout as apiLogout,
   refreshAccessToken,
   getCurrentUser,
@@ -22,6 +23,7 @@ interface AuthContextValue {
   isAuthenticated: boolean
   signup: (email: string, password: string) => Promise<ApiUser>
   login: (email: string, password: string) => Promise<void>
+  demoLogin: (role: "admin" | "user") => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -82,6 +84,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(currentUser)
   }
 
+  async function demoLogin(role: "admin" | "user"): Promise<void> {
+    await apiDemoLogin(role)
+    const currentUser = await getCurrentUser()
+    setUser(currentUser)
+  }
+
   async function logout(): Promise<void> {
     try {
       await apiLogout()
@@ -97,6 +105,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isAuthenticated: user !== null,
     signup,
     login,
+    demoLogin,
     logout,
   }
 
