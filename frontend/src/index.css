@@ -940,3 +940,134 @@ body:has(.app.theme-student) {
   color: #FFFFFF;
 }
 
+
+/* ==================================
+   STUDENT QUIZ ATTEMPT
+================================== */
+
+.student-attempt {
+  max-width: 900px;
+  margin: 28px auto;
+  padding: 28px;
+  background: #FFFFFF;
+  border: 1px solid #DCE8F3;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(55, 105, 150, 0.08);
+}
+
+.student-attempt-header {
+  margin-bottom: 28px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #E5EDF5;
+}
+
+.student-attempt-header h2 {
+  color: #315F89;
+  margin-bottom: 8px;
+}
+
+.student-attempt-header p {
+  color: #64748B;
+  margin: 6px 0;
+}
+
+.student-attempt-question {
+  margin-bottom: 22px;
+  padding: 20px;
+  background: #F5F9FD;
+  border: 1px solid #E0EAF4;
+  border-radius: 12px;
+}
+
+.student-attempt-question h3 {
+  color: #294D70;
+  font-size: 17px;
+  margin-bottom: 16px;
+}
+
+.student-attempt-options {
+  display: grid;
+  gap: 10px;
+}
+
+.student-attempt-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  background: #FFFFFF;
+  border: 1px solid #D8E4EF;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.student-attempt-option:hover {
+  background: #EDF5FC;
+  border-color: #8AB6DE;
+}
+
+.student-attempt-option.selected {
+  background: #E7F2FC;
+  border-color: #6FA8DC;
+  font-weight: 600;
+}
+
+.student-attempt-option input {
+  accent-color: #508FCB;
+}
+
+.student-attempt-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.student-attempt-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .student-attempt {
+    padding: 18px 14px;
+  }
+
+  .student-attempt-question {
+    padding: 15px;
+  }
+
+  .student-attempt-actions {
+    flex-direction: column;
+  }
+
+  .student-attempt-actions button {
+    width: 100%;
+  }
+}
+
+
+/* Fix student quiz option alignment */
+
+.student-attempt-option {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start !important;
+  align-items: center;
+  text-align: left !important;
+  gap: 12px;
+}
+
+.student-attempt-option input[type="radio"] {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  position: static;
+}
+
+.student-attempt-option span {
+  flex: 1;
+  text-align: left !important;
+}

@@ -1,5 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
-import type { Quiz, Question, StudentQuestion } from "./types/quiz";
+﻿import { useEffect, useState, type FormEvent } from "react";
+import type { Quiz, Question, StudentQuestion, StudentQuiz } from "./types/quiz";
+import type { AttemptResult } from "./types/attempt";
 import {
   getQuizzes,
   getQuizManagement,
@@ -20,15 +21,19 @@ import AdminManagement from "./components/AdminManagement";
 import AdminDashboard from "./components/AdminDashboard";
 import UserManagement from "./components/UserManagement";
 import StudentProfile from "./components/StudentProfile";
+import StudentQuizAttempt from "./components/StudentQuizAttempt";
+import StudentAttemptHistory from "./components/StudentAttemptHistory";
 import { useAuth } from "./context/AuthContext";
 
 function App() {
   const { user, loading: authLoading, isAuthenticated, logout } = useAuth();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [activePage, setActivePage] = useState<"dashboard" | "admins" | "profile" | "admin-dashboard" | "user-management">("dashboard");
+  const [activePage, setActivePage] = useState<"dashboard" | "admins" | "profile" | "admin-dashboard" | "user-management" | "attempt-history">("dashboard");
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [studentQuestions, setStudentQuestions] = useState<StudentQuestion[]>([]);
+  const [selectedStudentQuiz, setSelectedStudentQuiz] = useState<StudentQuiz | null>(null);
+  const [attemptResult, setAttemptResult] = useState<AttemptResult | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -68,12 +73,14 @@ function App() {
   }
 
   async function openQuiz(quiz: Quiz) {
+    setAttemptResult(null);
     setSelectedQuiz(quiz);
     setEditingQuestionId(null);
     setQuestionText("");
     setOptions(["", "", "", ""]);
     setCorrectOption(0);
     clearMessages();
+    setSelectedStudentQuiz(null);
 
     try {
       if (user?.role === "admin") {
@@ -87,6 +94,7 @@ function App() {
 
         setStudentQuestions(data.questions);
         setQuestions([]);
+        setSelectedStudentQuiz(data);
         setSelectedQuiz(data);
       }
     } catch (err) {
@@ -322,7 +330,7 @@ function App() {
             <p className="welcome-intro">Welcome to</p>
             <h1 className="welcome-brand">Quizzy</h1>
             <p className="welcome-tagline">
-              Learn · Play · Challenge Yourself
+              Learn Â· Play Â· Challenge Yourself
             </p>
             <p className="welcome-description">
               Discover fun quizzes, test your knowledge, and challenge
@@ -334,7 +342,7 @@ function App() {
             <LoginForm onSuccess={loadQuizzes} />
           </div>
         </section>
-        <footer>Quizzy · Learn something new every day</footer>
+        <footer>Quizzy Â· Learn something new every day</footer>
       </main>
     );
   }
@@ -344,11 +352,20 @@ function App() {
       <header className="topbar">
         <div>
           <h1>Quiz Game</h1>
-          <p>{user?.email} · Role: {user?.role}</p>
+          <p>{user?.email} Â· Role: {user?.role}</p>
         </div>
 
         <nav className="app-navigation">
           <button type="button" className={activePage === "profile" ? "" : "secondary"} onClick={() => setActivePage("profile")}>My Profile</button>
+          {user?.role === "user" && (
+            <button
+              type="button"
+              className={activePage === "attempt-history" ? "" : "secondary"}
+              onClick={() => setActivePage("attempt-history")}
+            >
+              My Quiz History
+            </button>
+          )}
           <button
             type="button"
             className={activePage === "dashboard" ? "" : "secondary"}
@@ -405,8 +422,51 @@ function App() {
         </button>
       </header>
 
-      {activePage === "profile" ? (
+      {user?.role === "user" && attemptResult && activePage === "dashboard" ? (
+        <section className="panel">
+          <div className="section-heading">
+            <div>
+              <h2>Quiz Result</h2>
+              <p>Your quiz has been submitted successfully.</p>
+            </div>
+          </div>
+
+          <div className="profile-details">
+            <div className="profile-detail">
+              <span>Score</span>
+              <strong>{attemptResult.score}/{attemptResult.total_questions}</strong>
+            </div>
+
+            <div className="profile-detail">
+              <span>Correct Answers</span>
+              <strong>{attemptResult.correct_answers}</strong>
+            </div>
+
+            <div className="profile-detail">
+              <span>Total Questions</span>
+              <strong>{attemptResult.total_questions}</strong>
+            </div>
+
+            <div className="profile-detail">
+              <span>Submitted At</span>
+              <strong>{new Date(attemptResult.submitted_at).toLocaleString()}</strong>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setAttemptResult(null);
+              setActivePage("dashboard");
+            }}
+          >
+            Back to Dashboard
+          </button>
+        </section>
+      ) : activePage === "profile" ? (
         <StudentProfile />
+      ) : activePage === "attempt-history" && user?.role === "user" ? (
+        <StudentAttemptHistory />
       ) : activePage === "admin-dashboard" && user?.role === "admin" ? (
         <AdminDashboard />
       ) : activePage === "admins" && user?.role === "admin" ? (
@@ -442,46 +502,23 @@ function App() {
         onTogglePublish={toggleQuizPublish}
       />
 
-      {user?.role === "user" && selectedQuiz && (
-        <section className="student-quiz-questions">
-          <div className="student-quiz-header">
-            <h2>{selectedQuiz.title}</h2>
-            <button
-              className="secondary"
-              type="button"
-              onClick={() => {
-                setSelectedQuiz(null);
-                setStudentQuestions([]);
-                clearMessages();
-              }}
-            >
-              Close
-            </button>
-          </div>
-
-          <h3>Questions</h3>
-
-          {studentQuestions.length === 0 ? (
-            <p>No questions available for this quiz yet.</p>
-          ) : (
-            studentQuestions.map((question, index) => (
-              <article className="student-question-card" key={question.id}>
-                <h3>
-                  {index + 1}. {question.question_text}
-                </h3>
-
-                <ul>
-                  {question.options.map((option, optionIndex) => (
-                    <li key={optionIndex}>
-                      <strong>{String.fromCharCode(65 + optionIndex)}.</strong>{" "}
-                      {option}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))
-          )}
-        </section>
+      {user?.role === "user" && selectedStudentQuiz && (
+        <StudentQuizAttempt
+          quiz={selectedStudentQuiz}
+          onSubmitted={(result) => {
+            setAttemptResult(result);
+            setMessage("");
+            setSelectedStudentQuiz(null);
+            setSelectedQuiz(null);
+            setStudentQuestions([]);
+          }}
+          onCancel={() => {
+            setSelectedStudentQuiz(null);
+            setSelectedQuiz(null);
+            setStudentQuestions([]);
+            clearMessages();
+          }}
+        />
       )}
 
       {user?.role === "admin" && selectedQuiz && (
@@ -511,26 +548,9 @@ function App() {
 
         </>
       )}
-      <footer>Quiz Game · Admin Management MVP</footer>
+      <footer>Quiz Game Â· Admin Management MVP</footer>
     </main>
   );
 }
 
 export default App;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -80,3 +80,66 @@ class RefreshSession(Base):
     replaced_by_token_hash = Column(String(64), nullable=True)
 
     user = relationship("User")
+
+
+# =========================
+# STUDENT QUIZ ATTEMPT MODELS
+# =========================
+
+class QuizAttempt(Base):
+    __tablename__ = "quiz_attempts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    quiz_id = Column(
+        Integer,
+        ForeignKey("quizzes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    score = Column(Integer, nullable=False, default=0)
+    total_questions = Column(Integer, nullable=False)
+    correct_answers = Column(Integer, nullable=False, default=0)
+    submitted_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    user = relationship("User")
+    quiz = relationship("Quiz")
+    answers = relationship(
+        "QuizAnswer",
+        back_populates="attempt",
+        cascade="all, delete-orphan",
+    )
+
+    @property
+    def quiz_title(self):
+        return self.quiz.title if self.quiz else f"Quiz #{self.quiz_id}"
+
+
+class QuizAnswer(Base):
+    __tablename__ = "quiz_answers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    attempt_id = Column(
+        Integer,
+        ForeignKey("quiz_attempts.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    question_id = Column(
+        Integer,
+        ForeignKey("questions.id"),
+        nullable=False,
+    )
+    selected_option = Column(Integer, nullable=False)
+    is_correct = Column(Boolean, nullable=False)
+
+    attempt = relationship("QuizAttempt", back_populates="answers")

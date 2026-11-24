@@ -1,13 +1,17 @@
-﻿
 import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import Base, engine
+from models import QuizAttempt, QuizAnswer
+
 from routers.auth import router as auth_router
 from routers.quizzes import router as quizzes_router
 from routers.admin import router as admin_router
+from routers.admin_dashboard import router as admin_dashboard_router
+from routers.admin_users import router as admin_users_router
+from routers.attempts import router as attempts_router
 
 
 # =========================
@@ -54,6 +58,9 @@ Base.metadata.create_all(bind=engine)
 app.include_router(auth_router)
 app.include_router(quizzes_router)
 app.include_router(admin_router)
+app.include_router(admin_dashboard_router)
+app.include_router(admin_users_router)
+app.include_router(attempts_router)
 
 
 # =========================
@@ -76,10 +83,3 @@ def health():
     return {
         "status": "ok"
     }
-
-
-from routers.admin_dashboard import router as admin_dashboard_router
-app.include_router(admin_dashboard_router)
-
-from routers.admin_users import router as admin_users_router
-app.include_router(admin_users_router)
