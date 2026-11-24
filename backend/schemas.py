@@ -182,9 +182,13 @@ class UserResponse(BaseModel):
 
     id: int
     email: str
+    name: str | None = None
     role: str
     is_active: bool
     created_at: datetime
+
+class UserProfileUpdate(BaseModel):
+    name: str | None = Field(default=None, max_length=100)
 
 class SessionResponse(BaseModel):
     id: int

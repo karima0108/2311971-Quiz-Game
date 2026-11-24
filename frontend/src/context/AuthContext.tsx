@@ -1,3 +1,4 @@
+
 import {
   createContext,
   useContext,
@@ -13,6 +14,7 @@ import {
   logout as apiLogout,
   refreshAccessToken,
   getCurrentUser,
+  updateMyProfile,
   setAccessToken,
   type ApiUser,
 } from "../services/api"
@@ -24,6 +26,7 @@ interface AuthContextValue {
   signup: (email: string, password: string) => Promise<ApiUser>
   login: (email: string, password: string) => Promise<void>
   demoLogin: (role: "admin" | "user") => Promise<void>
+  updateUser: (name: string) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -90,6 +93,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(currentUser)
   }
 
+  async function updateUser(name: string): Promise<void> {
+    const updatedUser = await updateMyProfile(name)
+    setUser(updatedUser)
+  }
+
   async function logout(): Promise<void> {
     try {
       await apiLogout()
@@ -106,6 +114,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signup,
     login,
     demoLogin,
+    updateUser,
     logout,
   }
 
