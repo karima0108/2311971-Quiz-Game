@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { Quiz, Question, StudentQuestion, StudentQuiz } from "./types/quiz";
 import type { AttemptResult } from "./types/attempt";
 import {
@@ -20,6 +20,7 @@ import LoginForm from "./components/LoginForm";
 import AdminManagement from "./components/AdminManagement";
 import AdminDashboard from "./components/AdminDashboard";
 import UserManagement from "./components/UserManagement";
+import AuditLogs from "./components/AuditLogs";
 import StudentProfile from "./components/StudentProfile";
 import StudentQuizAttempt from "./components/StudentQuizAttempt";
 import StudentAttemptHistory from "./components/StudentAttemptHistory";
@@ -28,7 +29,7 @@ import { useAuth } from "./context/AuthContext";
 function App() {
   const { user, loading: authLoading, isAuthenticated, logout } = useAuth();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [activePage, setActivePage] = useState<"dashboard" | "admins" | "profile" | "admin-dashboard" | "user-management" | "attempt-history">("dashboard");
+  const [activePage, setActivePage] = useState<"dashboard" | "admins" | "profile" | "admin-dashboard" | "user-management" | "audit-logs" | "attempt-history">("dashboard");
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [studentQuestions, setStudentQuestions] = useState<StudentQuestion[]>([]);
@@ -405,6 +406,16 @@ function App() {
             </button>
           )}
 
+          {user?.role === "admin" && (
+            <button
+              type="button"
+              className={activePage === "audit-logs" ? "" : "secondary"}
+              onClick={() => setActivePage("audit-logs")}
+            >
+              Audit Logs
+            </button>
+          )}
+
         <button
           className="secondary"
           type="button"
@@ -471,6 +482,8 @@ function App() {
         <AdminDashboard />
       ) : activePage === "admins" && user?.role === "admin" ? (
         <AdminManagement />
+      ) : activePage === "audit-logs" && user?.role === "admin" ? (
+        <AuditLogs />
       ) : activePage === "user-management" && user?.role === "admin" ? (
         <UserManagement />
       ) : (
@@ -554,3 +567,6 @@ function App() {
 }
 
 export default App;
+
+
+

@@ -1,6 +1,11 @@
 
 import type { Quiz, Question, StudentQuiz } from "../types/quiz"
 import type { AttemptSubmission, AttemptResult } from "../types/attempt"
+import type {
+  AuditLog,
+  AuditLogsResponse,
+  AuditLogParams,
+} from "../types/auditLog"
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || "/api"
@@ -406,4 +411,47 @@ export async function submitQuizAttempt(
 
 export async function getMyAttempts(): Promise<AttemptResult[]> {
   return apiRequest<AttemptResult[]>("/attempts/me")
+}
+
+// =========================
+// ADMIN AUDIT LOG API
+// =========================
+
+export async function getAuditLogs(
+  params: AuditLogParams = {},
+): Promise<AuditLogsResponse> {
+  const query = new URLSearchParams()
+
+  if (params.actor_id !== undefined) {
+    query.set("actor_id", String(params.actor_id))
+  }
+
+  if (params.action?.trim()) {
+    query.set("action", params.action.trim())
+  }
+
+  if (params.target_type?.trim()) {
+    query.set("target_type", params.target_type.trim())
+  }
+
+  if (params.start_date) {
+    query.set("start_date", params.start_date)
+  }
+
+  if (params.end_date) {
+    query.set("end_date", params.end_date)
+  }
+
+  query.set("page", String(params.page ?? 1))
+  query.set("page_size", String(params.page_size ?? 10))
+
+  return apiRequest<AuditLogsResponse>(
+    `/admin/audit-logs?${query.toString()}`,
+  )
+}
+
+export async function getAuditLogDetails(
+  logId: number,
+): Promise<AuditLog> {
+  return apiRequest<AuditLog>(`/admin/audit-logs/${logId}`)
 }
