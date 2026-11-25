@@ -301,7 +301,6 @@ def assign_group_permission(
 
     permission = data.permission.strip()
 
-    import re
 
     if not re.fullmatch(
         r"[a-z][a-z0-9_-]*(?:[:.][a-z][a-z0-9_-]*)*",

@@ -136,26 +136,43 @@ def test_student_can_only_view_own_groups_and_permissions(
     student_user,
     another_student,
 ):
-    group = create_group(client, admin_headers)
-
-    client.post(
-        f"/api/admin/groups/{group['id']}/members",
-        json={"user_id": student_user.id},
-        headers=admin_headers,
+    student_group = create_group(
+        client,
+        admin_headers,
+        "Student A Group",
     )
 
-    client.post(
-        f"/api/admin/groups/{group['id']}/members",
-        json={"user_id": another_student.id},
-        headers=admin_headers,
+    another_group = create_group(
+        client,
+        admin_headers,
+        "Student B Group",
     )
 
-    client.post(
-        f"/api/admin/groups/{group['id']}/permissions",
-        json={"permission": "group:resources:read"},
-        headers=admin_headers,
-    )
+    # Add each student to a separate group.
+    for group, user in [
+        (student_group, student_user),
+        (another_group, another_student),
+    ]:
+        response = client.post(
+            f"/api/admin/groups/{group['id']}/members",
+            json={"user_id": user.id},
+            headers=admin_headers,
+        )
+        assert response.status_code == 201
 
+    # Assign different permissions to each group.
+    for group, permission in [
+        (student_group, "group:resources:read"),
+        (another_group, "group:private:read"),
+    ]:
+        response = client.post(
+            f"/api/admin/groups/{group['id']}/permissions",
+            json={"permission": permission},
+            headers=admin_headers,
+        )
+        assert response.status_code == 201
+
+    # Student A must see only their own group.
     groups_response = client.get(
         "/api/groups/me",
         headers=student_headers,
@@ -163,8 +180,9 @@ def test_student_can_only_view_own_groups_and_permissions(
 
     assert groups_response.status_code == 200
     assert len(groups_response.json()) == 1
-    assert groups_response.json()[0]["id"] == group["id"]
+    assert groups_response.json()[0]["id"] == student_group["id"]
 
+    # Student A must see only their own permissions.
     permissions_response = client.get(
         "/api/groups/me/permissions",
         headers=student_headers,
@@ -174,7 +192,6 @@ def test_student_can_only_view_own_groups_and_permissions(
     assert permissions_response.json()["permissions"] == [
         "group:resources:read"
     ]
-
 
 def test_student_cannot_access_admin_group_routes(
     client,
