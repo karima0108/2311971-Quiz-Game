@@ -281,8 +281,10 @@ export async function deleteAdmin(adminId: number): Promise<void> {
 
 export interface AdminDashboardStats {
   total_users: number
+  total_students: number
   active_users: number
   total_admins: number
+  banned_users: number
   total_quizzes: number
   published_quizzes: number
 }
@@ -295,12 +297,51 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
 // ADMIN USER MANAGEMENT API
 // =========================
 
-export async function getUsers(search = ""): Promise<ApiUser[]> {
-  const query = search.trim()
-    ? `?search=${encodeURIComponent(search.trim())}`
-    : ""
+export interface AdminUsersResponse {
+  items: ApiUser[]
+  total: number
+  page: number
+  page_size: number
+  total_pages: number
+}
 
-  return apiRequest<ApiUser[]>(`/admin/users${query}`)
+export interface UserListParams {
+  search?: string
+  role?: "user" | "admin"
+  status?: "active" | "inactive" | "banned" | "unbanned"
+  page?: number
+  page_size?: number
+}
+
+export async function getUsers(
+  params: UserListParams = {},
+): Promise<AdminUsersResponse> {
+  const query = new URLSearchParams()
+
+  if (params.search?.trim()) {
+    query.set("search", params.search.trim())
+  }
+
+  if (params.role) {
+    query.set("role", params.role)
+  }
+
+  if (params.status) {
+    query.set("status", params.status)
+  }
+
+  query.set("page", String(params.page ?? 1))
+  query.set("page_size", String(params.page_size ?? 10))
+
+  return apiRequest<AdminUsersResponse>(
+    `/admin/users?${query.toString()}`,
+  )
+}
+
+export async function getUserDetails(
+  userId: number,
+): Promise<ApiUser> {
+  return apiRequest<ApiUser>(`/admin/users/${userId}`)
 }
 
 export async function updateUserStatus(
@@ -345,6 +386,7 @@ export async function changeUserRole(
     body: JSON.stringify({ role }),
   })
 }
+
 // =========================
 // STUDENT QUIZ ATTEMPT API
 // =========================
