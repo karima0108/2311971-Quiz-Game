@@ -1,4 +1,4 @@
-import os
+﻿import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +12,8 @@ from routers.admin import router as admin_router
 from routers.admin_dashboard import router as admin_dashboard_router
 from routers.admin_users import router as admin_users_router
 from routers.attempts import router as attempts_router
+from routers.groups import router as groups_router
+from routers.groups import student_router
 
 
 # =========================
@@ -61,6 +63,8 @@ app.include_router(admin_router)
 app.include_router(admin_dashboard_router)
 app.include_router(admin_users_router)
 app.include_router(attempts_router)
+app.include_router(groups_router)
+app.include_router(student_router)
 
 
 # =========================

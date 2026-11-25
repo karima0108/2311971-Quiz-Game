@@ -1,4 +1,6 @@
 
+import re
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import (
     HTTPBearer,
@@ -7,7 +9,7 @@ from fastapi.security import (
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import User
+from models import User, GroupMembership, GroupPermission
 from jwt_handler import verify_access_token
 
 
@@ -38,7 +40,6 @@ def get_current_user(
     if not user or not user.is_active:
         raise credentials_exception
 
-    # Reject banned users, including users with previously issued access tokens.
     if user.is_banned:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -91,3 +92,56 @@ def require_student(
         )
 
     return current_user
+
+
+# =========================
+# FINE-GRAINED PERMISSIONS
+# =========================
+
+def require_permission(permission_name: str):
+    if (
+        not isinstance(permission_name, str)
+        or len(permission_name) > 100
+        or not re.fullmatch(
+            r"[a-z][a-z0-9_-]*(?:[:.][a-z][a-z0-9_-]*)*",
+            permission_name,
+        )
+    ):
+        raise ValueError("Invalid permission name")
+
+    def permission_checker(
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ):
+        # Admins retain their existing unrestricted access.
+        if current_user.role == "admin":
+            return current_user
+
+        if current_user.role != "user":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Permission denied",
+            )
+
+        has_permission = (
+            db.query(GroupPermission)
+            .join(
+                GroupMembership,
+                GroupPermission.group_id == GroupMembership.group_id,
+            )
+            .filter(
+                GroupMembership.user_id == current_user.id,
+                GroupPermission.permission == permission_name,
+            )
+            .first()
+        )
+
+        if not has_permission:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have the required permission",
+            )
+
+        return current_user
+
+    return permission_checker
