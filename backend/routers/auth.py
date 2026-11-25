@@ -618,6 +618,7 @@ def revoke_all_sessions(
 def demo_login(
     role: str,
     response: Response,
+    request: Request,
     db: Session = Depends(get_db),
 ):
     if role not in ("admin", "user"):
@@ -650,6 +651,6 @@ def demo_login(
     return login(
         LoginRequest(email=email, password=password),
         response,
+        request,
         db
     )
-
