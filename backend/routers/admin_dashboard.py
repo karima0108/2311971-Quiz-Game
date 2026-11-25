@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -19,12 +20,20 @@ def get_dashboard_stats(
 ):
     total_users = db.query(User).count()
 
+    total_students = db.query(User).filter(
+        User.role == "user"
+    ).count()
+
     active_users = db.query(User).filter(
         User.is_active.is_(True)
     ).count()
 
     total_admins = db.query(User).filter(
         User.role == "admin"
+    ).count()
+
+    banned_users = db.query(User).filter(
+        User.is_banned.is_(True)
     ).count()
 
     total_quizzes = db.query(Quiz).count()
@@ -35,8 +44,10 @@ def get_dashboard_stats(
 
     return {
         "total_users": total_users,
+        "total_students": total_students,
         "active_users": active_users,
         "total_admins": total_admins,
+        "banned_users": banned_users,
         "total_quizzes": total_quizzes,
         "published_quizzes": published_quizzes,
     }

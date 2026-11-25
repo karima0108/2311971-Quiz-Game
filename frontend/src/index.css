@@ -1071,3 +1071,62 @@ body:has(.app.theme-student) {
   flex: 1;
   text-align: left !important;
 }
+
+
+/* Admin User Management spacing */
+
+.user-management .section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.user-management .admin-list-section {
+  margin-top: 28px;
+}
+
+.user-management .admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.user-management .admin-card {
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: #fff;
+}
+
+.user-management .admin-card p {
+  margin: 8px 0;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.user-management .admin-card button {
+  margin: 0;
+}
+
+.user-management .user-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+@media (max-width: 600px) {
+  .user-management .admin-card {
+    padding: 16px;
+  }
+
+  .user-management .user-pagination {
+    gap: 10px;
+  }
+}
