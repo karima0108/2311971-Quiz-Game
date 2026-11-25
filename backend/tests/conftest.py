@@ -22,6 +22,7 @@ from routers.quizzes import router as quizzes_router
 from routers.admin import router as admin_router
 from routers.admin_dashboard import router as admin_dashboard_router
 from routers.admin_users import router as admin_users_router
+from routers.audit_logs import router as audit_logs_router
 from routers.attempts import router as attempts_router
 from routers.groups import router as groups_router
 from routers.groups import student_router
@@ -62,6 +63,7 @@ def app(db_session):
     test_app.include_router(admin_router)
     test_app.include_router(admin_dashboard_router)
     test_app.include_router(admin_users_router)
+    test_app.include_router(audit_logs_router)
     test_app.include_router(attempts_router)
     test_app.include_router(groups_router)
     test_app.include_router(student_router)

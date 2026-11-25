@@ -1,4 +1,4 @@
-﻿
+
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from dependencies import require_admin
-from models import User, RefreshSession
+from models import User, RefreshSession, AuditLog
 from schemas import UserResponse
 
 
@@ -148,6 +148,14 @@ def update_user_status(
             synchronize_session=False,
         )
 
+    db.add(AuditLog(
+        actor_id=current_admin.id,
+        action="user.activated" if is_active else "user.deactivated",
+        target_type="user",
+        target_id=str(target_user.id),
+        description=f"Admin {'activated' if is_active else 'deactivated'} user {target_user.email}",
+        details={"is_active": is_active},
+    ))
     db.commit()
     db.refresh(target_user)
 
@@ -201,6 +209,7 @@ def change_user_role(
                 detail="The last active admin cannot be demoted",
             )
 
+    previous_role = target_user.role
     target_user.role = request.role
 
     now = datetime.now(timezone.utc)
@@ -212,6 +221,15 @@ def change_user_role(
         {"revoked_at": now},
         synchronize_session=False,
     )
+
+    db.add(AuditLog(
+        actor_id=current_admin.id,
+        action="user.role_changed",
+        target_type="user",
+        target_id=str(target_user.id),
+        description=f"Admin changed user {target_user.email} role",
+        details={"old_role": previous_role, "new_role": request.role},
+    ))
 
     db.commit()
     db.refresh(target_user)
@@ -277,6 +295,15 @@ def ban_user(
         synchronize_session=False,
     )
 
+    db.add(AuditLog(
+        actor_id=current_admin.id,
+        action="user.banned",
+        target_type="user",
+        target_id=str(target_user.id),
+        description=f"Admin banned user {target_user.email}",
+        details={"reason": reason},
+    ))
+
     db.commit()
     db.refresh(target_user)
 
@@ -316,7 +343,22 @@ def unban_user(
     target_user.banned_at = None
     target_user.banned_by = None
 
+    db.add(AuditLog(
+        actor_id=current_admin.id,
+        action="user.unbanned",
+        target_type="user",
+        target_id=str(target_user.id),
+        description=f"Admin unbanned user {target_user.email}",
+        details={"is_banned": False},
+    ))
+
     db.commit()
     db.refresh(target_user)
 
     return target_user
+
+
+
+
+
+

@@ -201,3 +201,31 @@ class SessionResponse(BaseModel):
     created_at: datetime
     expires_at: datetime
     is_current: bool
+
+
+# =========================
+# AUDIT LOG SCHEMAS
+# =========================
+
+class AuditLogResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    actor_id: int | None = None
+    actor_name: str | None = None
+    actor_email: str | None = None
+    action: str
+    target_type: str | None = None
+    target_id: str | None = None
+    description: str
+    details: dict | None = None
+    ip_address: str | None = None
+    created_at: datetime
+
+
+class AuditLogListResponse(BaseModel):
+    items: list[AuditLogResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int

@@ -252,3 +252,38 @@ class GroupPermission(Base):
     )
 
     group = relationship("Group", back_populates="permissions")
+
+
+# =========================
+# AUDIT LOG MODEL
+# =========================
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    actor_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    action = Column(String(100), nullable=False, index=True)
+
+    target_type = Column(String(100), nullable=True, index=True)
+    target_id = Column(String(100), nullable=True, index=True)
+
+    description = Column(Text, nullable=False)
+
+    details = Column(JSON, nullable=True)
+
+    ip_address = Column(String(45), nullable=True)
+
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        index=True,
+    )

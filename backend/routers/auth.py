@@ -1,4 +1,4 @@
-﻿
+
 import hashlib
 import secrets
 import os
@@ -15,11 +15,12 @@ from fastapi import (
     status,
     Response,
     Cookie,
+    Request,
 )
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import User, RefreshSession
+from models import User, RefreshSession, AuditLog
 from schemas import (
     LoginRequest,
     SignupRequest,
@@ -38,7 +39,24 @@ router = APIRouter(
     prefix="/api/auth",
     tags=["Authentication"]
 )
-
+def record_auth_audit(
+    db: Session,
+    action: str,
+    description: str,
+    actor_id: int | None = None,
+    ip_address: str | None = None,
+):
+    db.add(
+        AuditLog(
+            actor_id=actor_id,
+            action=action,
+            target_type="user" if actor_id else None,
+            target_id=str(actor_id) if actor_id else None,
+            description=description,
+            details=None,
+            ip_address=ip_address,
+        )
+    )
 
 # =========================
 # REFRESH TOKEN CONFIGURATION
@@ -136,9 +154,11 @@ def signup(
 def login(
     data: LoginRequest,
     response: Response,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     email = data.email.strip().lower()
+    ip_address = request.client.host if request.client else None
 
     user = db.query(User).filter(
         User.email == email
@@ -148,19 +168,45 @@ def login(
         data.password,
         user.hashed_password
     ):
+        record_auth_audit(
+            db=db,
+            action="auth.login_failed",
+            description="Login failed: invalid email or password",
+            actor_id=user.id if user else None,
+            ip_address=ip_address,
+        )
+        db.commit()
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
 
     if not user.is_active:
+        record_auth_audit(
+            db=db,
+            action="auth.login_failed",
+            description="Login failed: account is inactive",
+            actor_id=user.id,
+            ip_address=ip_address,
+        )
+        db.commit()
+
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This account is inactive"
         )
 
-    # Reject banned users during login.
     if user.is_banned:
+        record_auth_audit(
+            db=db,
+            action="auth.login_failed",
+            description="Login failed: account is banned",
+            actor_id=user.id,
+            ip_address=ip_address,
+        )
+        db.commit()
+
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This account has been banned"
@@ -176,6 +222,14 @@ def login(
     refresh_token, refresh_session = create_refresh_session(
         db,
         user
+    )
+
+    record_auth_audit(
+        db=db,
+        action="auth.login_success",
+        description="User logged in successfully",
+        actor_id=user.id,
+        ip_address=ip_address,
     )
 
     try:
@@ -399,10 +453,14 @@ def refresh_access_token(
 
 @router.post("/logout")
 def logout(
+    request: Request,
     response: Response,
     refresh_token: str | None = Cookie(default=None),
     db: Session = Depends(get_db)
 ):
+    user_id = None
+    ip_address = request.client.host if request.client else None
+
     if refresh_token:
         token_hash = hash_refresh_token(refresh_token)
 
@@ -410,9 +468,21 @@ def logout(
             RefreshSession.token_hash == token_hash
         ).first()
 
-        if session and session.revoked_at is None:
-            session.revoked_at = datetime.now(timezone.utc)
-            db.commit()
+        if session:
+            user_id = session.user_id
+
+            if session.revoked_at is None:
+                session.revoked_at = datetime.now(timezone.utc)
+
+    record_auth_audit(
+        db=db,
+        action="auth.logout",
+        description="User logged out",
+        actor_id=user_id,
+        ip_address=ip_address,
+    )
+
+    db.commit()
 
     is_production = os.getenv("ENVIRONMENT") == "production"
 
@@ -582,3 +652,4 @@ def demo_login(
         response,
         db
     )
+
