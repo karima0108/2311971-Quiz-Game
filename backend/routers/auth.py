@@ -29,7 +29,11 @@ from schemas import (
     UserResponse,
     SessionResponse,
 )
-from security import hash_password, verify_password
+from security import (
+    hash_password,
+    verify_password,
+    verify_password_and_update,
+)
 from jwt_handler import create_access_token
 from dependencies import get_current_user
 
@@ -144,14 +148,27 @@ def login(
         User.email == email
     ).first()
 
-    if not user or not verify_password(
-        data.password,
-        user.hashed_password
-    ):
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
+
+    # Verify password and upgrade legacy hash if necessary.
+    password_valid, upgraded_hash = verify_password_and_update(
+        data.password,
+        user.hashed_password,
+    )
+
+    if not password_valid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+
+    # Save the upgraded pepper-based password hash.
+    if upgraded_hash:
+        user.hashed_password = upgraded_hash
 
     if not user.is_active:
         raise HTTPException(
