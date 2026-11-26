@@ -1,4 +1,4 @@
-
+﻿
 import hashlib
 import secrets
 import os
@@ -30,7 +30,11 @@ from schemas import (
     UserResponse,
     SessionResponse,
 )
-from security import hash_password, verify_password
+from security import (
+    hash_password,
+    verify_password,
+    verify_password_and_update,
+)
 from jwt_handler import create_access_token
 from dependencies import get_current_user
 
@@ -164,10 +168,18 @@ def login(
         User.email == email
     ).first()
 
-    if not user or not verify_password(
-        data.password,
-        user.hashed_password
-    ):
+    # Verify password and support legacy hash upgrade.
+    password_valid = False
+    upgraded_hash = None
+
+    if user:
+        password_valid, upgraded_hash = verify_password_and_update(
+            data.password,
+            user.hashed_password,
+        )
+
+    # Record failed login attempts.
+    if not user or not password_valid:
         record_auth_audit(
             db=db,
             action="auth.login_failed",
@@ -181,6 +193,10 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
+
+    # Upgrade legacy password hash when necessary.
+    if upgraded_hash:
+        user.hashed_password = upgraded_hash
 
     if not user.is_active:
         record_auth_audit(
