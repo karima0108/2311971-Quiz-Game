@@ -1,3 +1,4 @@
+﻿
 import { useEffect, useState, type FormEvent } from "react";
 import type { Quiz, Question, StudentQuestion, StudentQuiz } from "./types/quiz";
 import type { AttemptResult } from "./types/attempt";
@@ -24,12 +25,25 @@ import AuditLogs from "./components/AuditLogs";
 import StudentProfile from "./components/StudentProfile";
 import StudentQuizAttempt from "./components/StudentQuizAttempt";
 import StudentAttemptHistory from "./components/StudentAttemptHistory";
+import GroupManagement from "./components/GroupManagement";
+import StudentGroups from "./components/StudentGroups";
 import { useAuth } from "./context/AuthContext";
 
 function App() {
   const { user, loading: authLoading, isAuthenticated, logout } = useAuth();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [activePage, setActivePage] = useState<"dashboard" | "admins" | "profile" | "admin-dashboard" | "user-management" | "audit-logs" | "attempt-history">("dashboard");
+  const [activePage, setActivePage] = useState<
+    | "dashboard"
+    | "admins"
+    | "profile"
+    | "admin-dashboard"
+    | "user-management"
+    | "audit-logs"
+    | "attempt-history"
+    | "groups"
+    | "my-groups"
+  >("dashboard");
+
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [studentQuestions, setStudentQuestions] = useState<StudentQuestion[]>([]);
@@ -49,8 +63,7 @@ function App() {
   const [questionText, setQuestionText] = useState("");
   const [options, setOptions] = useState(["", "", "", ""]);
   const [correctOption, setCorrectOption] = useState(0);
-  const [editingQuestionId, setEditingQuestionId] =
-    useState<number | null>(null);
+  const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
 
   function clearMessages() {
     setMessage("");
@@ -65,9 +78,7 @@ function App() {
       const data = await getQuizzes();
       setQuizzes(data);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not load quizzes"
-      );
+      setError(err instanceof Error ? err.message : "Could not load quizzes");
     } finally {
       setLoading(false);
     }
@@ -86,27 +97,26 @@ function App() {
     try {
       if (user?.role === "admin") {
         const data = await getQuizManagement(quiz.id);
-
         setQuestions(data.questions);
         setStudentQuestions([]);
         setSelectedQuiz(data);
       } else {
         const data = await getStudentQuiz(quiz.id);
-
         setStudentQuestions(data.questions);
         setQuestions([]);
         setSelectedStudentQuiz(data);
         setSelectedQuiz(data);
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not load questions"
-      );
+      setError(err instanceof Error ? err.message : "Could not load questions");
     }
   }
+
   useEffect(() => {
-    loadQuizzes();
-  }, []);
+    if (isAuthenticated) {
+      void loadQuizzes();
+    }
+  }, [isAuthenticated]);
 
   async function saveQuiz(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -130,11 +140,9 @@ function App() {
     try {
       if (editingQuizId !== null) {
         await updateQuiz(editingQuizId, body);
-
         setMessage("Quiz updated successfully!");
       } else {
         await createQuiz(body);
-
         setMessage("Quiz created successfully!");
       }
 
@@ -145,9 +153,7 @@ function App() {
 
       await loadQuizzes();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not save quiz"
-      );
+      setError(err instanceof Error ? err.message : "Could not save quiz");
     } finally {
       setSaving(false);
     }
@@ -161,7 +167,6 @@ function App() {
     setSelectedQuiz(null);
     setQuestions([]);
     clearMessages();
-
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -191,11 +196,10 @@ function App() {
 
       await loadQuizzes();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not update quiz status"
-      );
+      setError(err instanceof Error ? err.message : "Could not update quiz status");
     }
   }
+
   async function deleteQuiz(id: number) {
     const confirmed = window.confirm(
       "Are you sure you want to delete this quiz and all its questions?"
@@ -207,7 +211,6 @@ function App() {
 
     try {
       await deleteQuizApi(id);
-
       setMessage("Quiz deleted successfully!");
 
       if (selectedQuiz?.id === id) {
@@ -221,9 +224,7 @@ function App() {
 
       await loadQuizzes();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not delete quiz"
-      );
+      setError(err instanceof Error ? err.message : "Could not delete quiz");
     }
   }
 
@@ -255,11 +256,9 @@ function App() {
     try {
       if (editingQuestionId !== null) {
         await updateQuestion(editingQuestionId, body);
-
         setMessage("Question updated successfully!");
       } else {
         await createQuestion(selectedQuiz.id, body);
-
         setMessage("Question added successfully!");
       }
 
@@ -270,9 +269,7 @@ function App() {
 
       await openQuiz(selectedQuiz);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not save question"
-      );
+      setError(err instanceof Error ? err.message : "Could not save question");
     } finally {
       setSaving(false);
     }
@@ -295,16 +292,13 @@ function App() {
 
     try {
       await deleteQuestionApi(id);
-
       setMessage("Question deleted successfully!");
 
       if (selectedQuiz) {
         await openQuiz(selectedQuiz);
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not delete question"
-      );
+      setError(err instanceof Error ? err.message : "Could not delete question");
     }
   }
 
@@ -357,16 +351,34 @@ function App() {
         </div>
 
         <nav className="app-navigation">
-          <button type="button" className={activePage === "profile" ? "" : "secondary"} onClick={() => setActivePage("profile")}>My Profile</button>
+          <button
+            type="button"
+            className={activePage === "profile" ? "" : "secondary"}
+            onClick={() => setActivePage("profile")}
+          >
+            My Profile
+          </button>
+
           {user?.role === "user" && (
-            <button
-              type="button"
-              className={activePage === "attempt-history" ? "" : "secondary"}
-              onClick={() => setActivePage("attempt-history")}
-            >
-              My Quiz History
-            </button>
+            <>
+              <button
+                type="button"
+                className={activePage === "attempt-history" ? "" : "secondary"}
+                onClick={() => setActivePage("attempt-history")}
+              >
+                My Quiz History
+              </button>
+
+              <button
+                type="button"
+                className={activePage === "my-groups" ? "" : "secondary"}
+                onClick={() => setActivePage("my-groups")}
+              >
+                My Groups
+              </button>
+            </>
           )}
+
           <button
             type="button"
             className={activePage === "dashboard" ? "" : "secondary"}
@@ -376,45 +388,49 @@ function App() {
           </button>
 
           {user?.role === "admin" && (
-            <button
-              type="button"
-              className={activePage === "admin-dashboard" ? "" : "secondary"}
-              onClick={() => setActivePage("admin-dashboard")}
-            >
-              Admin Dashboard
-            </button>
-          )}
+            <>
+              <button
+                type="button"
+                className={activePage === "admin-dashboard" ? "" : "secondary"}
+                onClick={() => setActivePage("admin-dashboard")}
+              >
+                Admin Dashboard
+              </button>
 
-          {user?.role === "admin" && (
-            <button
-              type="button"
-              className={activePage === "admins" ? "" : "secondary"}
-              onClick={() => setActivePage("admins")}
-            >
-              Admin Management
-            </button>
+              <button
+                type="button"
+                className={activePage === "admins" ? "" : "secondary"}
+                onClick={() => setActivePage("admins")}
+              >
+                Admin Management
+              </button>
+
+              <button
+                type="button"
+                className={activePage === "groups" ? "" : "secondary"}
+                onClick={() => setActivePage("groups")}
+              >
+                Group Management
+              </button>
+
+              <button
+                type="button"
+                className={activePage === "user-management" ? "" : "secondary"}
+                onClick={() => setActivePage("user-management")}
+              >
+                User Management
+              </button>
+
+              <button
+                type="button"
+                className={activePage === "audit-logs" ? "" : "secondary"}
+                onClick={() => setActivePage("audit-logs")}
+              >
+                Audit Logs
+              </button>
+            </>
           )}
         </nav>
-
-          {user?.role === "admin" && (
-            <button
-              type="button"
-              className={activePage === "user-management" ? "" : "secondary"}
-              onClick={() => setActivePage("user-management")}
-            >
-              User Management
-            </button>
-          )}
-
-          {user?.role === "admin" && (
-            <button
-              type="button"
-              className={activePage === "audit-logs" ? "" : "secondary"}
-              onClick={() => setActivePage("audit-logs")}
-            >
-              Audit Logs
-            </button>
-          )}
 
         <button
           className="secondary"
@@ -423,10 +439,11 @@ function App() {
         >
           Logout
         </button>
+
         <button
           className="secondary"
           type="button"
-          onClick={loadQuizzes}
+          onClick={() => { void loadQuizzes(); }}
           disabled={loading}
         >
           {loading ? "Refreshing..." : "Refresh"}
@@ -478,6 +495,10 @@ function App() {
         <StudentProfile />
       ) : activePage === "attempt-history" && user?.role === "user" ? (
         <StudentAttemptHistory />
+      ) : activePage === "my-groups" && user?.role === "user" ? (
+        <StudentGroups />
+      ) : activePage === "groups" && user?.role === "admin" ? (
+        <GroupManagement />
       ) : activePage === "admin-dashboard" && user?.role === "admin" ? (
         <AdminDashboard />
       ) : activePage === "admins" && user?.role === "admin" ? (
@@ -488,85 +509,83 @@ function App() {
         <UserManagement />
       ) : (
         <>
-      {message && <div className="success">{message}</div>}
-      {error && <div className="error">{error}</div>}
+          {message && <div className="success">{message}</div>}
+          {error && <div className="error">{error}</div>}
 
-      {user?.role === "admin" && (
-      <QuizForm
-        quizTitle={quizTitle}
-        quizDescription={quizDescription}
-          quizIsPublished={quizIsPublished}
-          setQuizIsPublished={setQuizIsPublished}
-        editingQuizId={editingQuizId}
-        saving={saving}
-        setQuizTitle={setQuizTitle}
-        setQuizDescription={setQuizDescription}
-        onSubmit={saveQuiz}
-        onCancel={cancelQuizEdit}
-      />
-      )}
-      <QuizList
-        quizzes={quizzes}
-        loading={loading}
-        isAdmin={user?.role === "admin"}
-        onOpen={openQuiz}
-        onEdit={startQuizEdit}
-        onDelete={deleteQuiz}
-        onTogglePublish={toggleQuizPublish}
-      />
+          {user?.role === "admin" && (
+            <QuizForm
+              quizTitle={quizTitle}
+              quizDescription={quizDescription}
+              quizIsPublished={quizIsPublished}
+              setQuizIsPublished={setQuizIsPublished}
+              editingQuizId={editingQuizId}
+              saving={saving}
+              setQuizTitle={setQuizTitle}
+              setQuizDescription={setQuizDescription}
+              onSubmit={saveQuiz}
+              onCancel={cancelQuizEdit}
+            />
+          )}
 
-      {user?.role === "user" && selectedStudentQuiz && (
-        <StudentQuizAttempt
-          quiz={selectedStudentQuiz}
-          onSubmitted={(result) => {
-            setAttemptResult(result);
-            setMessage("");
-            setSelectedStudentQuiz(null);
-            setSelectedQuiz(null);
-            setStudentQuestions([]);
-          }}
-          onCancel={() => {
-            setSelectedStudentQuiz(null);
-            setSelectedQuiz(null);
-            setStudentQuestions([]);
-            clearMessages();
-          }}
-        />
-      )}
+          <QuizList
+            quizzes={quizzes}
+            loading={loading}
+            isAdmin={user?.role === "admin"}
+            onOpen={openQuiz}
+            onEdit={startQuizEdit}
+            onDelete={deleteQuiz}
+            onTogglePublish={toggleQuizPublish}
+          />
 
-      {user?.role === "admin" && selectedQuiz && (
-        <QuestionManager
-          selectedQuiz={selectedQuiz}
-          questions={questions}
-          questionText={questionText}
-          options={options}
-          correctOption={correctOption}
-          editingQuestionId={editingQuestionId}
-          saving={saving}
-          setQuestionText={setQuestionText}
-          setOptions={setOptions}
-          setCorrectOption={setCorrectOption}
-          onSubmit={saveQuestion}
-          onCancel={cancelQuestionEdit}
-          onClose={() => {
-            setSelectedQuiz(null);
-            setQuestions([]);
-            cancelQuestionEdit();
-            clearMessages();
-          }}
-          onEdit={startQuestionEdit}
-          onDelete={deleteQuestion}
-        />
-      )}
+          {user?.role === "user" && selectedStudentQuiz && (
+            <StudentQuizAttempt
+              quiz={selectedStudentQuiz}
+              onSubmitted={(result) => {
+                setAttemptResult(result);
+                setMessage("");
+                setSelectedStudentQuiz(null);
+                setSelectedQuiz(null);
+                setStudentQuestions([]);
+              }}
+              onCancel={() => {
+                setSelectedStudentQuiz(null);
+                setSelectedQuiz(null);
+                setStudentQuestions([]);
+                clearMessages();
+              }}
+            />
+          )}
 
+          {user?.role === "admin" && selectedQuiz && (
+            <QuestionManager
+              selectedQuiz={selectedQuiz}
+              questions={questions}
+              questionText={questionText}
+              options={options}
+              correctOption={correctOption}
+              editingQuestionId={editingQuestionId}
+              saving={saving}
+              setQuestionText={setQuestionText}
+              setOptions={setOptions}
+              setCorrectOption={setCorrectOption}
+              onSubmit={saveQuestion}
+              onCancel={cancelQuestionEdit}
+              onClose={() => {
+                setSelectedQuiz(null);
+                setQuestions([]);
+                cancelQuestionEdit();
+                clearMessages();
+              }}
+              onEdit={startQuestionEdit}
+              onDelete={deleteQuestion}
+            />
+          )}
         </>
       )}
+
       <footer>Quiz Game · Admin Management MVP</footer>
     </main>
   );
 }
 
 export default App;
-
-
-

@@ -199,6 +199,49 @@ def delete_group(
 
 
 # =========================
+# GROUP MEMBER AND PERMISSION LISTS
+# =========================
+
+@router.get("/{group_id}/members")
+def list_group_members(
+    group_id: int,
+    db: Session = Depends(get_db),
+):
+    group = get_group_or_404(group_id, db)
+
+    memberships = (
+        db.query(GroupMembership)
+        .filter(GroupMembership.group_id == group.id)
+        .all()
+    )
+
+    return [
+        {
+            "id": membership.user.id,
+            "name": membership.user.name,
+            "email": membership.user.email,
+        }
+        for membership in memberships
+    ]
+
+
+@router.get("/{group_id}/permissions")
+def list_group_permissions(
+    group_id: int,
+    db: Session = Depends(get_db),
+):
+    group = get_group_or_404(group_id, db)
+
+    permissions = (
+        db.query(GroupPermission.permission)
+        .filter(GroupPermission.group_id == group.id)
+        .order_by(GroupPermission.permission)
+        .all()
+    )
+
+    return [item[0] for item in permissions]
+
+# =========================
 # GROUP MEMBERSHIP
 # =========================
 
