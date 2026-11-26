@@ -1071,3 +1071,288 @@ body:has(.app.theme-student) {
   flex: 1;
   text-align: left !important;
 }
+
+
+/* Admin User Management spacing */
+
+.user-management .section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.user-management .admin-list-section {
+  margin-top: 28px;
+}
+
+.user-management .admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.user-management .admin-card {
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: #fff;
+}
+
+.user-management .admin-card p {
+  margin: 8px 0;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.user-management .admin-card button {
+  margin: 0;
+}
+
+.user-management .user-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+@media (max-width: 600px) {
+  .user-management .admin-card {
+    padding: 16px;
+  }
+
+  .user-management .user-pagination {
+    gap: 10px;
+  }
+}
+
+/* =========================
+   ADMIN AUDIT LOGS
+========================= */
+
+.audit-logs .section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.audit-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+}
+
+.audit-filter-grid label {
+  display: grid;
+  gap: 8px;
+  color: #51465e;
+  font-weight: 650;
+}
+
+.audit-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.audit-logs .admin-list-section {
+  margin-top: 28px;
+}
+
+.audit-logs .admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.audit-logs .admin-card {
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: #fff;
+  overflow-wrap: anywhere;
+}
+
+.audit-logs .admin-card p {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.audit-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: var(--plum);
+}
+
+.audit-log-details {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff7fa;
+  border: 1px solid var(--border);
+}
+
+.audit-log-details pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .audit-logs .admin-card {
+    padding: 16px;
+  }
+
+  .audit-filter-actions button {
+    flex: 1;
+  }
+}
+
+
+/* =========================
+   GROUP MANAGEMENT
+========================= */
+
+.group-management h3 {
+  color: var(--plum);
+  margin-top: 0;
+}
+
+.group-create-form {
+  max-width: 650px;
+  padding: 22px;
+  margin: 24px 0;
+  background: #fdf9fc;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+}
+
+.group-list-section,
+.group-details {
+  margin-top: 28px;
+}
+
+.group-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 15px;
+}
+
+.group-select {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  min-height: 90px;
+  padding: 17px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.group-select span {
+  font-size: 13px;
+  font-weight: 400;
+  opacity: 0.8;
+  overflow-wrap: anywhere;
+}
+
+.group-select.active {
+  background: var(--lavender);
+  color: var(--plum-dark);
+  border: 2px solid #b9a6ce;
+}
+
+.group-details {
+  padding-top: 25px;
+  border-top: 1px solid var(--border);
+}
+
+.group-subsection {
+  margin-top: 28px;
+  padding: 22px;
+  background: #fdf9fc;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+}
+
+.group-inline-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.group-inline-form input,
+.group-inline-form select {
+  flex: 1;
+  min-width: 0;
+}
+
+.group-item-list {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.group-item-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+}
+
+.group-item-list li div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.group-item-list li span {
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.danger-button {
+  background: #fce4ec;
+  color: #a33b5d;
+  white-space: nowrap;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: #f8cbd9;
+  color: #842c49;
+}
+
+@media (max-width: 600px) {
+  .group-inline-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .group-item-list li {
+    align-items: flex-start;
+  }
+
+  .group-details .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -31,10 +31,12 @@ function AdminDashboard() {
     void loadStats();
   }, [loadStats]);
 
-  const cards = [
+    const cards = [
     { label: "Total Users", value: stats?.total_users },
-    { label: "Active Users", value: stats?.active_users },
+    { label: "Total Students", value: stats?.total_students },
     { label: "Total Admins", value: stats?.total_admins },
+    { label: "Active Users", value: stats?.active_users },
+    { label: "Banned Users", value: stats?.banned_users },
     { label: "Total Quizzes", value: stats?.total_quizzes },
     { label: "Published Quizzes", value: stats?.published_quizzes },
   ];

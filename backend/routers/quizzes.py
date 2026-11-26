@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from database import get_db
+from models import AuditLog, Quiz
 from dependencies import require_admin, get_optional_user
 from schemas import (
     QuizCreate,
@@ -72,7 +73,19 @@ def create_quiz(
     admin=Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    return quiz_service.create_quiz(db, data)
+    quiz = quiz_service.create_quiz(db, data)
+
+    db.add(AuditLog(
+        actor_id=admin.id,
+        action="quiz.created",
+        target_type="quiz",
+        target_id=str(quiz.id),
+        description=f"Admin created quiz: {quiz.title}",
+        details={"title": quiz.title},
+    ))
+    db.commit()
+
+    return quiz
 
 # UPDATE QUIZ - ADMIN ONLY
 @router.patch("/quizzes/{quiz_id}", response_model=QuizPublic)
@@ -82,7 +95,37 @@ def update_quiz(
     admin=Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    return quiz_service.update_quiz(db, quiz_id, data)
+    quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
+
+    if not quiz:
+        return quiz_service.update_quiz(db, quiz_id, data)
+
+    previous_title = quiz.title
+    previous_published = quiz.is_published
+
+    quiz = quiz_service.update_quiz(db, quiz_id, data)
+
+    if previous_published != quiz.is_published:
+        action = "quiz.published" if quiz.is_published else "quiz.unpublished"
+    else:
+        action = "quiz.updated"
+
+    db.add(AuditLog(
+        actor_id=admin.id,
+        action=action,
+        target_type="quiz",
+        target_id=str(quiz.id),
+        description=f"Admin {action.replace('quiz.', '')} quiz: {quiz.title}",
+        details={
+            "old_title": previous_title,
+            "new_title": quiz.title,
+            "old_is_published": previous_published,
+            "new_is_published": quiz.is_published,
+        },
+    ))
+    db.commit()
+
+    return quiz
 
 
 # DELETE QUIZ - ADMIN ONLY
@@ -92,7 +135,26 @@ def delete_quiz(
     admin=Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    return quiz_service.delete_quiz(db, quiz_id)
+    quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
+
+    if not quiz:
+        return quiz_service.delete_quiz(db, quiz_id)
+
+    deleted_title = quiz.title
+
+    result = quiz_service.delete_quiz(db, quiz_id)
+
+    db.add(AuditLog(
+        actor_id=admin.id,
+        action="quiz.deleted",
+        target_type="quiz",
+        target_id=str(quiz_id),
+        description=f"Admin deleted quiz: {deleted_title}",
+        details={"title": deleted_title},
+    ))
+    db.commit()
+
+    return result
 
 # =========================
 # QUESTION CRUD
@@ -147,5 +209,10 @@ def delete_question(
     db: Session = Depends(get_db),
 ):
     return quiz_service.delete_question(db, question_id)
+
+
+
+
+
 
 

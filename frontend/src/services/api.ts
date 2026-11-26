@@ -1,6 +1,11 @@
 
 import type { Quiz, Question, StudentQuiz } from "../types/quiz"
 import type { AttemptSubmission, AttemptResult } from "../types/attempt"
+import type {
+  AuditLog,
+  AuditLogsResponse,
+  AuditLogParams,
+} from "../types/auditLog"
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || "/api"
@@ -281,8 +286,10 @@ export async function deleteAdmin(adminId: number): Promise<void> {
 
 export interface AdminDashboardStats {
   total_users: number
+  total_students: number
   active_users: number
   total_admins: number
+  banned_users: number
   total_quizzes: number
   published_quizzes: number
 }
@@ -295,12 +302,51 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
 // ADMIN USER MANAGEMENT API
 // =========================
 
-export async function getUsers(search = ""): Promise<ApiUser[]> {
-  const query = search.trim()
-    ? `?search=${encodeURIComponent(search.trim())}`
-    : ""
+export interface AdminUsersResponse {
+  items: ApiUser[]
+  total: number
+  page: number
+  page_size: number
+  total_pages: number
+}
 
-  return apiRequest<ApiUser[]>(`/admin/users${query}`)
+export interface UserListParams {
+  search?: string
+  role?: "user" | "admin"
+  status?: "active" | "inactive" | "banned" | "unbanned"
+  page?: number
+  page_size?: number
+}
+
+export async function getUsers(
+  params: UserListParams = {},
+): Promise<AdminUsersResponse> {
+  const query = new URLSearchParams()
+
+  if (params.search?.trim()) {
+    query.set("search", params.search.trim())
+  }
+
+  if (params.role) {
+    query.set("role", params.role)
+  }
+
+  if (params.status) {
+    query.set("status", params.status)
+  }
+
+  query.set("page", String(params.page ?? 1))
+  query.set("page_size", String(params.page_size ?? 10))
+
+  return apiRequest<AdminUsersResponse>(
+    `/admin/users?${query.toString()}`,
+  )
+}
+
+export async function getUserDetails(
+  userId: number,
+): Promise<ApiUser> {
+  return apiRequest<ApiUser>(`/admin/users/${userId}`)
 }
 
 export async function updateUserStatus(
@@ -345,6 +391,7 @@ export async function changeUserRole(
     body: JSON.stringify({ role }),
   })
 }
+
 // =========================
 // STUDENT QUIZ ATTEMPT API
 // =========================
@@ -364,4 +411,151 @@ export async function submitQuizAttempt(
 
 export async function getMyAttempts(): Promise<AttemptResult[]> {
   return apiRequest<AttemptResult[]>("/attempts/me")
+}
+
+// =========================
+// ADMIN AUDIT LOG API
+// =========================
+
+export async function getAuditLogs(
+  params: AuditLogParams = {},
+): Promise<AuditLogsResponse> {
+  const query = new URLSearchParams()
+
+  if (params.actor_id !== undefined) {
+    query.set("actor_id", String(params.actor_id))
+  }
+
+  if (params.action?.trim()) {
+    query.set("action", params.action.trim())
+  }
+
+  if (params.target_type?.trim()) {
+    query.set("target_type", params.target_type.trim())
+  }
+
+  if (params.start_date) {
+    query.set("start_date", params.start_date)
+  }
+
+  if (params.end_date) {
+    query.set("end_date", params.end_date)
+  }
+
+  query.set("page", String(params.page ?? 1))
+  query.set("page_size", String(params.page_size ?? 10))
+
+  return apiRequest<AuditLogsResponse>(
+    `/admin/audit-logs?${query.toString()}`,
+  )
+}
+
+export async function getAuditLogDetails(
+  logId: number,
+): Promise<AuditLog> {
+  return apiRequest<AuditLog>(`/admin/audit-logs/${logId}`)
+}
+
+
+// =========================
+// GROUP MANAGEMENT API
+// =========================
+
+export interface Group {
+  id: number
+  name: string
+  description: string | null
+}
+
+export interface GroupMember {
+  id: number
+  name: string | null
+  email: string
+}
+
+export interface StudentGroup {
+  id: number
+  name: string
+  description: string | null
+  permissions: string[]
+}
+
+export async function getGroups(): Promise<Group[]> {
+  return apiRequest<Group[]>("/admin/groups")
+}
+
+export async function createGroup(data: {
+  name: string
+  description: string | null
+}): Promise<Group> {
+  return apiRequest<Group>("/admin/groups", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteGroup(groupId: number): Promise<void> {
+  return apiRequest<void>(`/admin/groups/${groupId}`, {
+    method: "DELETE",
+  })
+}
+
+export async function getGroupMembers(
+  groupId: number,
+): Promise<GroupMember[]> {
+  return apiRequest<GroupMember[]>(
+    `/admin/groups/${groupId}/members`,
+  )
+}
+
+export async function addGroupMember(
+  groupId: number,
+  userId: number,
+): Promise<{ message: string }> {
+  return apiRequest(`/admin/groups/${groupId}/members`, {
+    method: "POST",
+    body: JSON.stringify({ user_id: userId }),
+  })
+}
+
+export async function removeGroupMember(
+  groupId: number,
+  userId: number,
+): Promise<{ message: string }> {
+  return apiRequest(
+    `/admin/groups/${groupId}/members/${userId}`,
+    { method: "DELETE" },
+  )
+}
+
+export async function getGroupPermissions(
+  groupId: number,
+): Promise<string[]> {
+  return apiRequest<string[]>(
+    `/admin/groups/${groupId}/permissions`,
+  )
+}
+
+export async function assignGroupPermission(
+  groupId: number,
+  permission: string,
+): Promise<{ message: string }> {
+  return apiRequest(`/admin/groups/${groupId}/permissions`, {
+    method: "POST",
+    body: JSON.stringify({ permission }),
+  })
+}
+
+export async function revokeGroupPermission(
+  groupId: number,
+  permission: string,
+): Promise<{ message: string }> {
+  return apiRequest(
+    `/admin/groups/${groupId}/permissions/${encodeURIComponent(permission)}`,
+    { method: "DELETE" },
+  )
+}
+
+export async function getMyGroups(): Promise<StudentGroup[]> {
+  return apiRequest<StudentGroup[]>("/groups/me")
 }

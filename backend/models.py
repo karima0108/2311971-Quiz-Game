@@ -154,3 +154,136 @@ class QuizAnswer(Base):
     is_correct = Column(Boolean, nullable=False)
 
     attempt = relationship("QuizAttempt", back_populates="answers")
+
+
+# =========================
+# GROUP AND PERMISSION MODELS
+# =========================
+
+class Group(Base):
+    __tablename__ = "groups"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False, unique=True, index=True)
+    description = Column(Text, nullable=True)
+
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    members = relationship(
+        "GroupMembership",
+        back_populates="group",
+        cascade="all, delete-orphan",
+    )
+
+    permissions = relationship(
+        "GroupPermission",
+        back_populates="group",
+        cascade="all, delete-orphan",
+    )
+
+
+class GroupMembership(Base):
+    __tablename__ = "group_members"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "group_id",
+            "user_id",
+            name="uq_group_member",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    group_id = Column(
+        Integer,
+        ForeignKey("groups.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    group = relationship("Group", back_populates="members")
+    user = relationship("User")
+
+
+class GroupPermission(Base):
+    __tablename__ = "group_permissions"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "group_id",
+            "permission",
+            name="uq_group_permission",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    group_id = Column(
+        Integer,
+        ForeignKey("groups.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    permission = Column(String(100), nullable=False)
+
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    group = relationship("Group", back_populates="permissions")
+
+
+# =========================
+# AUDIT LOG MODEL
+# =========================
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    actor_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    action = Column(String(100), nullable=False, index=True)
+
+    target_type = Column(String(100), nullable=True, index=True)
+    target_id = Column(String(100), nullable=True, index=True)
+
+    description = Column(Text, nullable=False)
+
+    details = Column(JSON, nullable=True)
+
+    ip_address = Column(String(45), nullable=True)
+
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        index=True,
+    )
