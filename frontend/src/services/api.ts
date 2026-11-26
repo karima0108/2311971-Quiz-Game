@@ -455,3 +455,107 @@ export async function getAuditLogDetails(
 ): Promise<AuditLog> {
   return apiRequest<AuditLog>(`/admin/audit-logs/${logId}`)
 }
+
+
+// =========================
+// GROUP MANAGEMENT API
+// =========================
+
+export interface Group {
+  id: number
+  name: string
+  description: string | null
+}
+
+export interface GroupMember {
+  id: number
+  name: string | null
+  email: string
+}
+
+export interface StudentGroup {
+  id: number
+  name: string
+  description: string | null
+  permissions: string[]
+}
+
+export async function getGroups(): Promise<Group[]> {
+  return apiRequest<Group[]>("/admin/groups")
+}
+
+export async function createGroup(data: {
+  name: string
+  description: string | null
+}): Promise<Group> {
+  return apiRequest<Group>("/admin/groups", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteGroup(groupId: number): Promise<void> {
+  return apiRequest<void>(`/admin/groups/${groupId}`, {
+    method: "DELETE",
+  })
+}
+
+export async function getGroupMembers(
+  groupId: number,
+): Promise<GroupMember[]> {
+  return apiRequest<GroupMember[]>(
+    `/admin/groups/${groupId}/members`,
+  )
+}
+
+export async function addGroupMember(
+  groupId: number,
+  userId: number,
+): Promise<{ message: string }> {
+  return apiRequest(`/admin/groups/${groupId}/members`, {
+    method: "POST",
+    body: JSON.stringify({ user_id: userId }),
+  })
+}
+
+export async function removeGroupMember(
+  groupId: number,
+  userId: number,
+): Promise<{ message: string }> {
+  return apiRequest(
+    `/admin/groups/${groupId}/members/${userId}`,
+    { method: "DELETE" },
+  )
+}
+
+export async function getGroupPermissions(
+  groupId: number,
+): Promise<string[]> {
+  return apiRequest<string[]>(
+    `/admin/groups/${groupId}/permissions`,
+  )
+}
+
+export async function assignGroupPermission(
+  groupId: number,
+  permission: string,
+): Promise<{ message: string }> {
+  return apiRequest(`/admin/groups/${groupId}/permissions`, {
+    method: "POST",
+    body: JSON.stringify({ permission }),
+  })
+}
+
+export async function revokeGroupPermission(
+  groupId: number,
+  permission: string,
+): Promise<{ message: string }> {
+  return apiRequest(
+    `/admin/groups/${groupId}/permissions/${encodeURIComponent(permission)}`,
+    { method: "DELETE" },
+  )
+}
+
+export async function getMyGroups(): Promise<StudentGroup[]> {
+  return apiRequest<StudentGroup[]>("/groups/me")
+}
