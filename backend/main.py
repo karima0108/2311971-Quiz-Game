@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from database import Base, engine
 from migrations import migrate_group_owner_column
-from models import QuizAttempt, QuizAnswer, AuditLog
+from models import QuizAttempt, QuizAnswer, AuditLog, User
 
 from routers.auth import router as auth_router
 from routers.quizzes import router as quizzes_router
@@ -90,13 +90,31 @@ def root():
 
 @app.get("/api/health")
 def health():
+    from database import SessionLocal
+
+    db = SessionLocal()
+
     try:
-        with engine.connect() as connection:
-            connection.execute(text("SELECT 1"))
+        db.execute(text("SELECT 1"))
+
+        total_users = db.query(User).count()
+
+        admin = db.query(User).filter(
+            User.email == "abcd@gmail.com"
+        ).first()
+
+        student = db.query(User).filter(
+            User.email == "xyz@gmail.com"
+        ).first()
 
         return {
             "status": "ok",
-            "database": "connected"
+            "database": "connected",
+            "total_users": total_users,
+            "demo_admin_exists": admin is not None,
+            "demo_admin_role_correct": admin is not None and admin.role == "admin",
+            "demo_user_exists": student is not None,
+            "demo_user_role_correct": student is not None and student.role == "user"
         }
 
     except Exception:
@@ -104,6 +122,9 @@ def health():
             "status": "error",
             "database": "disconnected"
         }
+
+    finally:
+        db.close()
 
 
 
