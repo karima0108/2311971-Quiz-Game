@@ -17,7 +17,7 @@ from models import (
 )
 from jwt_handler import create_access_token
 
-from routers.auth import router as auth_router
+from routers.auth import router as auth_router, create_refresh_session
 from routers.quizzes import router as quizzes_router
 from routers.admin import router as admin_router
 from routers.admin_dashboard import router as admin_dashboard_router
@@ -150,21 +150,30 @@ def question(db_session, quiz):
     return item
 
 
-def make_auth_headers(user):
-    token = create_access_token({"sub": str(user.id)})
+def make_auth_headers(user, db_session):
+    _, refresh_session = create_refresh_session(db_session, user)
+
+    token = create_access_token({
+        "sub": str(user.id),
+        "user_id": user.id,
+        "email": user.email,
+        "role": user.role,
+        "sid": refresh_session.id,
+    })
+
     return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture
-def admin_headers(admin_user):
-    return make_auth_headers(admin_user)
+def admin_headers(admin_user, db_session):
+    return make_auth_headers(admin_user, db_session)
 
 
 @pytest.fixture
-def student_headers(student_user):
-    return make_auth_headers(student_user)
+def student_headers(student_user, db_session):
+    return make_auth_headers(student_user, db_session)
 
 
 @pytest.fixture
-def another_student_headers(another_student):
-    return make_auth_headers(another_student)
+def another_student_headers(another_student, db_session):
+    return make_auth_headers(another_student, db_session)
