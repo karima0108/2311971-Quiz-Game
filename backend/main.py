@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import Base, engine
+from migrations import migrate_group_owner_column
 from models import QuizAttempt, QuizAnswer, AuditLog
 
 from routers.auth import router as auth_router
@@ -52,6 +53,8 @@ app.add_middleware(
 # =========================
 
 Base.metadata.create_all(bind=engine)
+
+migrate_group_owner_column(engine)
 
 
 # =========================

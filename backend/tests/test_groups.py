@@ -259,3 +259,171 @@ def test_student_with_permission_can_access_resources(
             "group_name": group["name"],
         }
     ]
+
+
+def test_group_owner_can_update_and_delete_own_group(
+    client,
+    student_headers,
+    db_session,
+):
+    create_response = client.post(
+        "/api/groups",
+        json={"name": "Owner Group", "description": "Test group"},
+        headers=student_headers,
+    )
+    assert create_response.status_code == 201
+    group_id = create_response.json()["id"]
+    from models import Group
+
+    saved_group = db_session.query(Group).filter(
+       Group.id == group_id
+    ).first()
+
+    assert saved_group is not None
+    assert saved_group.owner_id is not None
+
+    update_response = client.patch(
+        f"/api/groups/{group_id}",
+        json={"name": "Updated Owner Group"},
+        headers=student_headers,
+    )
+    assert update_response.status_code == 200
+    assert update_response.json()["name"] == "Updated Owner Group"
+
+    delete_response = client.delete(
+        f"/api/groups/{group_id}",
+        headers=student_headers,
+    )
+    assert delete_response.status_code == 204
+
+
+def test_group_owner_can_add_and_remove_members(
+    client,
+    student_headers,
+    another_student,
+):
+    create_response = client.post(
+        "/api/groups",
+        json={"name": "Member Test Group"},
+        headers=student_headers,
+    )
+    assert create_response.status_code == 201
+    group_id = create_response.json()["id"]
+
+    add_response = client.post(
+        f"/api/groups/{group_id}/members",
+        json={"user_id": another_student.id},
+        headers=student_headers,
+    )
+    assert add_response.status_code == 201
+
+    remove_response = client.delete(
+        f"/api/groups/{group_id}/members/{another_student.id}",
+        headers=student_headers,
+    )
+    assert remove_response.status_code == 200
+
+
+def test_non_owner_cannot_manage_another_users_group(
+    client,
+    student_headers,
+    another_student_headers,
+    another_student,
+):
+    create_response = client.post(
+        "/api/groups",
+        json={"name": "Private Owner Group"},
+        headers=student_headers,
+    )
+    assert create_response.status_code == 201
+    group_id = create_response.json()["id"]
+
+    update_response = client.patch(
+        f"/api/groups/{group_id}",
+        json={"name": "Unauthorized Rename"},
+        headers=another_student_headers,
+    )
+    assert update_response.status_code == 403
+
+    delete_response = client.delete(
+        f"/api/groups/{group_id}",
+        headers=another_student_headers,
+    )
+    assert delete_response.status_code == 403
+
+    add_response = client.post(
+        f"/api/groups/{group_id}/members",
+        json={"user_id": another_student.id},
+        headers=another_student_headers,
+    )
+    assert add_response.status_code == 403
+
+    remove_response = client.delete(
+        f"/api/groups/{group_id}/members/{another_student.id}",
+        headers=another_student_headers,
+    )
+    assert remove_response.status_code == 403
+
+
+def test_unauthenticated_user_cannot_manage_student_groups(
+    client,
+    student_headers,
+):
+    create_response = client.post(
+        "/api/groups",
+        json={"name": "Authentication Test Group"},
+        headers=student_headers,
+    )
+    assert create_response.status_code == 201
+    group_id = create_response.json()["id"]
+
+    update_response = client.patch(
+        f"/api/groups/{group_id}",
+        json={"name": "Unauthorized Rename"},
+    )
+    assert update_response.status_code == 401
+
+    delete_response = client.delete(
+        f"/api/groups/{group_id}",
+    )
+    assert delete_response.status_code == 401
+
+    add_response = client.post(
+        f"/api/groups/{group_id}/members",
+        json={"user_id": 1},
+    )
+    assert add_response.status_code == 401
+
+    remove_response = client.delete(
+        f"/api/groups/{group_id}/members/1",
+    )
+    assert remove_response.status_code == 401
+
+def test_group_creator_can_see_own_group_in_my_groups(
+    client,
+    student_headers,
+):
+    create_response = client.post(
+        "/api/groups",
+        json={
+            "name": "Creator Visibility Group",
+            "description": "Test creator membership",
+        },
+        headers=student_headers,
+    )
+
+    assert create_response.status_code == 201
+    group_id = create_response.json()["id"]
+
+    my_groups_response = client.get(
+        "/api/groups/me",
+        headers=student_headers,
+    )
+
+    assert my_groups_response.status_code == 200
+
+    my_group_ids = [
+        group["id"] for group in my_groups_response.json()
+    ]
+
+    assert group_id in my_group_ids

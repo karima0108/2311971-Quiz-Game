@@ -14,6 +14,11 @@ from dependencies import (
 )
 from models import Group, GroupMembership, GroupPermission, User
 
+
+# =========================
+# ADMIN GROUP ROUTER
+# =========================
+
 router = APIRouter(
     prefix="/api/admin/groups",
     tags=["Group Management"],
@@ -33,8 +38,10 @@ class GroupCreate(BaseModel):
     @classmethod
     def validate_name(cls, value):
         value = value.strip()
+
         if not value:
             raise ValueError("Group name cannot be empty")
+
         return value
 
     @field_validator("description")
@@ -43,6 +50,7 @@ class GroupCreate(BaseModel):
         if value is not None:
             value = value.strip()
             return value or None
+
         return value
 
 
@@ -55,8 +63,10 @@ class GroupUpdate(BaseModel):
     def validate_name(cls, value):
         if value is not None:
             value = value.strip()
+
             if not value:
                 raise ValueError("Group name cannot be empty")
+
         return value
 
     @field_validator("description")
@@ -65,6 +75,7 @@ class GroupUpdate(BaseModel):
         if value is not None:
             value = value.strip()
             return value or None
+
         return value
 
 
@@ -85,11 +96,15 @@ class PermissionCreate(BaseModel):
 
 
 # =========================
-# HELPER
+# HELPER FUNCTIONS
 # =========================
 
 def get_group_or_404(group_id: int, db: Session):
-    group = db.query(Group).filter(Group.id == group_id).first()
+    group = (
+        db.query(Group)
+        .filter(Group.id == group_id)
+        .first()
+    )
 
     if not group:
         raise HTTPException(
@@ -100,8 +115,24 @@ def get_group_or_404(group_id: int, db: Session):
     return group
 
 
+def get_group_for_owner(
+    group_id: int,
+    current_user: User,
+    db: Session,
+):
+    group = get_group_or_404(group_id, db)
+
+    if group.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the group owner can perform this action",
+        )
+
+    return group
+
+
 # =========================
-# GROUP CRUD
+# ADMIN GROUP CRUD
 # =========================
 
 @router.post(
@@ -111,6 +142,7 @@ def get_group_or_404(group_id: int, db: Session):
 )
 def create_group(
     data: GroupCreate,
+    current_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     existing = (
@@ -128,6 +160,7 @@ def create_group(
     group = Group(
         name=data.name,
         description=data.description,
+        owner_id=current_user.id,
     )
 
     db.add(group)
@@ -138,8 +171,14 @@ def create_group(
 
 
 @router.get("", response_model=list[GroupResponse])
-def list_groups(db: Session = Depends(get_db)):
-    return db.query(Group).order_by(Group.id.desc()).all()
+def list_groups(
+    db: Session = Depends(get_db),
+):
+    return (
+        db.query(Group)
+        .order_by(Group.id.desc())
+        .all()
+    )
 
 
 @router.get("/{group_id}", response_model=GroupResponse)
@@ -157,6 +196,7 @@ def update_group(
     db: Session = Depends(get_db),
 ):
     group = get_group_or_404(group_id, db)
+
     updates = data.model_dump(exclude_unset=True)
 
     if "name" in updates and updates["name"] is not None:
@@ -199,7 +239,7 @@ def delete_group(
 
 
 # =========================
-# GROUP MEMBER AND PERMISSION LISTS
+# ADMIN GROUP MEMBER AND PERMISSION LISTS
 # =========================
 
 @router.get("/{group_id}/members")
@@ -241,8 +281,9 @@ def list_group_permissions(
 
     return [item[0] for item in permissions]
 
+
 # =========================
-# GROUP MEMBERSHIP
+# ADMIN GROUP MEMBERSHIP
 # =========================
 
 @router.post(
@@ -256,7 +297,11 @@ def add_group_member(
 ):
     group = get_group_or_404(group_id, db)
 
-    user = db.query(User).filter(User.id == data.user_id).first()
+    user = (
+        db.query(User)
+        .filter(User.id == data.user_id)
+        .first()
+    )
 
     if not user:
         raise HTTPException(
@@ -296,9 +341,7 @@ def add_group_member(
     return {"message": "Student added to group successfully"}
 
 
-@router.delete(
-    "/{group_id}/members/{user_id}",
-)
+@router.delete("/{group_id}/members/{user_id}")
 def remove_group_member(
     group_id: int,
     user_id: int,
@@ -328,7 +371,7 @@ def remove_group_member(
 
 
 # =========================
-# GROUP PERMISSIONS
+# ADMIN GROUP PERMISSIONS
 # =========================
 
 @router.post(
@@ -343,7 +386,6 @@ def assign_group_permission(
     group = get_group_or_404(group_id, db)
 
     permission = data.permission.strip()
-
 
     if not re.fullmatch(
         r"[a-z][a-z0-9_-]*(?:[:.][a-z][a-z0-9_-]*)*",
@@ -381,9 +423,7 @@ def assign_group_permission(
     return {"message": "Permission assigned successfully"}
 
 
-@router.delete(
-    "/{group_id}/permissions/{permission}",
-)
+@router.delete("/{group_id}/permissions/{permission}")
 def revoke_group_permission(
     group_id: int,
     permission: str,
@@ -413,10 +453,8 @@ def revoke_group_permission(
 
 
 # =========================
-# STUDENT GROUP ACCESS
+# STUDENT GROUP ROUTER
 # =========================
-
-
 
 student_router = APIRouter(
     prefix="/api/groups",
@@ -424,6 +462,223 @@ student_router = APIRouter(
     dependencies=[Depends(require_student)],
 )
 
+
+# =========================
+# STUDENT GROUP CREATION
+# =========================
+
+@student_router.post(
+    "",
+    response_model=GroupResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_student_group(
+    data: GroupCreate,
+    current_user: User = Depends(require_student),
+    db: Session = Depends(get_db),
+):
+    existing = (
+        db.query(Group)
+        .filter(func.lower(Group.name) == data.name.lower())
+        .first()
+    )
+
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A group with this name already exists",
+        )
+
+    group = Group(
+        name=data.name,
+        description=data.description,
+        owner_id=current_user.id,
+    )
+
+    db.add(group)
+    db.flush()
+
+    membership = GroupMembership(
+        group_id=group.id,
+        user_id=current_user.id,
+    )
+
+    db.add(membership)
+    db.commit()
+    db.refresh(group)
+
+    return group
+
+
+# =========================
+# STUDENT OWNER-ONLY GROUP MANAGEMENT
+# =========================
+
+@student_router.patch(
+    "/{group_id}",
+    response_model=GroupResponse,
+)
+def update_student_group(
+    group_id: int,
+    data: GroupUpdate,
+    current_user: User = Depends(require_student),
+    db: Session = Depends(get_db),
+):
+    group = get_group_for_owner(
+        group_id,
+        current_user,
+        db,
+    )
+
+    updates = data.model_dump(exclude_unset=True)
+
+    if "name" in updates and updates["name"] is not None:
+        existing = (
+            db.query(Group)
+            .filter(
+                func.lower(Group.name) == updates["name"].lower(),
+                Group.id != group_id,
+            )
+            .first()
+        )
+
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="A group with this name already exists",
+            )
+
+    for key, value in updates.items():
+        setattr(group, key, value)
+
+    db.commit()
+    db.refresh(group)
+
+    return group
+
+
+@student_router.delete(
+    "/{group_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_student_group(
+    group_id: int,
+    current_user: User = Depends(require_student),
+    db: Session = Depends(get_db),
+):
+    group = get_group_for_owner(
+        group_id,
+        current_user,
+        db,
+    )
+
+    db.delete(group)
+    db.commit()
+
+
+# =========================
+# STUDENT OWNER-ONLY MEMBER MANAGEMENT
+# =========================
+
+@student_router.post(
+    "/{group_id}/members",
+    status_code=status.HTTP_201_CREATED,
+)
+def add_student_group_member(
+    group_id: int,
+    data: MemberCreate,
+    current_user: User = Depends(require_student),
+    db: Session = Depends(get_db),
+):
+    group = get_group_for_owner(
+        group_id,
+        current_user,
+        db,
+    )
+
+    user = (
+        db.query(User)
+        .filter(User.id == data.user_id)
+        .first()
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    if user.role != "user":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only students can be added to groups",
+        )
+
+    existing = (
+        db.query(GroupMembership)
+        .filter(
+            GroupMembership.group_id == group.id,
+            GroupMembership.user_id == user.id,
+        )
+        .first()
+    )
+
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Student is already a member of this group",
+        )
+
+    membership = GroupMembership(
+        group_id=group.id,
+        user_id=user.id,
+    )
+
+    db.add(membership)
+    db.commit()
+
+    return {"message": "Student added to group successfully"}
+
+
+@student_router.delete(
+    "/{group_id}/members/{user_id}",
+)
+def remove_student_group_member(
+    group_id: int,
+    user_id: int,
+    current_user: User = Depends(require_student),
+    db: Session = Depends(get_db),
+):
+    group = get_group_for_owner(
+        group_id,
+        current_user,
+        db,
+    )
+
+    membership = (
+        db.query(GroupMembership)
+        .filter(
+            GroupMembership.group_id == group.id,
+            GroupMembership.user_id == user_id,
+        )
+        .first()
+    )
+
+    if not membership:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group membership not found",
+        )
+
+    db.delete(membership)
+    db.commit()
+
+    return {"message": "Student removed from group successfully"}
+
+
+# =========================
+# STUDENT GROUP ACCESS
+# =========================
 
 @student_router.get("/me")
 def get_my_groups(
