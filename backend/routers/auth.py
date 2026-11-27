@@ -106,6 +106,7 @@ def create_refresh_session(db: Session, user: User):
     )
 
     db.add(session)
+    db.flush()
 
     return token, session
 
@@ -153,6 +154,7 @@ def signup(
 # =========================
 # USER LOGIN
 # =========================
+
 
 @router.post("/login", response_model=TokenResponse)
 def login(
@@ -228,17 +230,20 @@ def login(
             detail="This account has been banned"
         )
 
-    access_token = create_access_token({
-        "sub": str(user.id),
-        "user_id": user.id,
-        "email": user.email,
-        "role": user.role
-    })
-
+    # Create refresh session first.
     refresh_token, refresh_session = create_refresh_session(
         db,
         user
     )
+
+    # Link access token to this refresh session.
+    access_token = create_access_token({
+        "sub": str(user.id),
+        "user_id": user.id,
+        "email": user.email,
+        "role": user.role,
+        "sid": refresh_session.id
+    })
 
     record_auth_audit(
         db=db,
@@ -260,6 +265,7 @@ def login(
         "access_token": access_token,
         "token_type": "bearer"
     }
+
 
 
 # =========================
@@ -299,6 +305,7 @@ def update_my_profile(
 @router.post("/change-password")
 def change_password(
     data: PasswordChangeRequest,
+    request: Request,
     response: Response,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -307,6 +314,15 @@ def change_password(
         data.current_password,
         current_user.hashed_password
     ):
+        record_auth_audit(
+            db=db,
+            action="auth.password_change_failed",
+            description="Password change failed: incorrect current password",
+            actor_id=current_user.id,
+            ip_address=request.client.host if request.client else None,
+        )
+        db.commit()
+
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect",
@@ -319,6 +335,14 @@ def change_password(
         )
 
     current_user.hashed_password = hash_password(data.new_password)
+
+    record_auth_audit(
+        db=db,
+        action="auth.password_changed",
+        description="User changed password successfully",
+        actor_id=current_user.id,
+        ip_address=request.client.host if request.client else None,
+    )
 
     # Revoke all active refresh sessions.
     now = datetime.now(timezone.utc)
@@ -446,7 +470,8 @@ def refresh_access_token(
         "sub": str(user.id),
         "user_id": user.id,
         "email": user.email,
-        "role": user.role
+        "role": user.role,
+        "sid": new_session.id
     })
 
     try:
