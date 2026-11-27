@@ -1,7 +1,5 @@
 import os
 
-from security import verify_password
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
@@ -91,6 +89,7 @@ def root():
 # =========================
 
 
+
 @app.get("/api/health")
 def health():
     from database import SessionLocal
@@ -100,59 +99,9 @@ def health():
     try:
         db.execute(text("SELECT 1"))
 
-        total_users = db.query(User).count()
-
-        admin = db.query(User).filter(
-            User.email == "abcd@gmail.com"
-        ).first()
-
-        student = db.query(User).filter(
-            User.email == "xyz@gmail.com"
-        ).first()
-
-        db_identity = db.execute(
-            text("""
-                SELECT
-                    current_database(),
-                    inet_server_addr()::text,
-                    inet_server_port()
-            """)
-        ).fetchone()
-
-        admin_password = os.getenv("DEMO_ADMIN_PASSWORD", "")
-        user_password = os.getenv("DEMO_USER_PASSWORD", "")
-
         return {
             "status": "ok",
-            "database": "connected",
-            "database_name": db_identity[0],
-            "database_server": db_identity[1],
-            "database_port": db_identity[2],
-            "total_users": total_users,
-            "demo_admin_exists": admin is not None,
-            "demo_admin_role_correct": (
-                admin is not None and admin.role == "admin"
-            ),
-            "demo_admin_password_matches": (
-                bool(admin_password)
-                and admin is not None
-                and verify_password(
-                    admin_password,
-                    admin.hashed_password
-                )
-            ),
-            "demo_user_exists": student is not None,
-            "demo_user_role_correct": (
-                student is not None and student.role == "user"
-            ),
-            "demo_user_password_matches": (
-                bool(user_password)
-                and student is not None
-                and verify_password(
-                    user_password,
-                    student.hashed_password
-                )
-            )
+            "database": "connected"
         }
 
     except Exception:
