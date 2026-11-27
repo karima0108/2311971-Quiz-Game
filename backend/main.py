@@ -2,6 +2,7 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from database import Base, engine
 from migrations import migrate_group_owner_column
@@ -89,9 +90,20 @@ def root():
 
 @app.get("/api/health")
 def health():
-    return {
-        "status": "ok"
-    }
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+
+        return {
+            "status": "ok",
+            "database": "connected"
+        }
+
+    except Exception:
+        return {
+            "status": "error",
+            "database": "disconnected"
+        }
 
 
 
