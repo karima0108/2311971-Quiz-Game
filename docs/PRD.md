@@ -1,3 +1,4 @@
+
 # Product Requirements Document (PRD) — Quiz Game
 
 | Field | Details |
@@ -5,71 +6,100 @@
 | Project Name | Quiz Game |
 | Document | Product Requirements Document (PRD) |
 | Version | MVP + Beta |
-| Status | Updated Draft |
-| Frontend | React + TypeScript |
+| Status | Updated Draft – Implemented Features |
+| Frontend | React 19.3 + TypeScript 7.0 |
+| Build Tool | Vite 8.3 |
 | Backend | FastAPI + Python |
-| Database | SQLite (MVP) |
+| ORM | SQLAlchemy |
+| Database | SQLite (Local Development) / PostgreSQL (Deployment) |
+| Authentication | JWT-based Authentication |
+| Authorization | Role-Based Access Control (RBAC) and Group Permissions |
 | Architecture | Client–Server with REST API |
 
 ## 1. Product Overview
 
-Quiz Game is a web-based application designed to provide a structured platform for creating and managing multiple-choice quizzes. The application separates the frontend interface from backend operations through REST APIs.
+Quiz Game is a web-based application designed to provide a platform for creating, managing, and participating in multiple-choice quizzes. It supports two primary user roles: Admin and Student.
 
-The project is developed in two releases:
+The application uses a React and TypeScript frontend connected to a FastAPI backend through REST APIs. SQLAlchemy handles database operations, while the database configuration supports SQLite for local development and PostgreSQL for deployment.
 
-- **MVP (Mid-term):** Focuses on Admin-side quiz and question management. Admin users can create, view, update, and delete quizzes and questions through a React frontend connected to a FastAPI backend. Data is stored in a local database.
-- **Beta (Final):** Extends the MVP with authentication, role-based access control (RBAC), permission scopes, an Admin dashboard, user-management functionality, and deployment.
+The project was developed in two releases:
+
+- **MVP (Mid-term):** Focused on Admin-side quiz and question management, including create, view, update, and delete operations.
+- **Beta (Final):** Extended the MVP with authentication, role-based access control, user management, Admin dashboard, group management, quiz attempts, scoring, attempt history, audit logging, and deployment configuration.
 
 ## 2. Problem Statement
 
 Managing quiz content manually can be difficult when quiz information and questions are stored in separate places. Quiz managers need a consistent way to create, organize, update, and remove quiz content.
 
-Quiz Game addresses this problem by providing a centralized quiz-management interface backed by REST APIs and persistent data storage.
+Students also need a platform where they can access their accounts, participate in available quizzes, view their results, and manage their groups.
+
+Quiz Game addresses these requirements by providing a centralized quiz-management and participation platform with authentication, authorization, and persistent data storage.
 
 ## 3. Product Goals
 
-1. Provide an intuitive interface for managing quizzes and their questions.
+1. Provide an intuitive interface for managing quizzes and questions.
 2. Support complete CRUD operations for quiz and question resources.
-3. Maintain persistent quiz data through a database.
-4. Separate frontend presentation and backend business logic.
-5. Provide clear validation and error handling.
-6. Introduce authentication and role-based permissions in the Beta release.
-7. Maintain a manageable, testable codebase suitable for a university project demonstration.
+3. Allow registered Students to participate in published quizzes.
+4. Automatically calculate quiz results based on submitted answers.
+5. Maintain personal quiz attempt history.
+6. Provide secure authentication and role-based authorization.
+7. Allow Admins to manage users, roles, groups, and administrative permissions.
+8. Allow Students to create and manage their own groups.
+9. Maintain persistent data through a configurable database.
+10. Separate frontend presentation, backend business logic, and database operations.
+11. Provide validation, error handling, and security controls.
+12. Maintain a manageable and testable codebase suitable for a university project.
 
 ## 4. Target Users
 
 ### 4.1 Admin / Quiz Manager
 
-The Admin is responsible for managing quiz content.
+The Admin is responsible for managing quiz content and administrative operations.
 
-**MVP responsibilities:**
-- Create quizzes.
-- View the quiz list and individual quiz details.
-- Update quiz information.
-- Delete quizzes.
-- Add questions to a quiz.
-- View, update, and delete questions.
+**Responsibilities:**
 
-**Beta responsibilities:**
 - Log in securely.
 - Access the Admin dashboard.
-- Perform authorized management operations.
-- Manage user accounts and roles when permitted.
+- Create, view, update, and delete quizzes.
+- Add, view, update, and delete questions.
+- View and manage user accounts.
+- Change user roles and account status.
+- Ban and unban users.
+- Create and manage groups.
+- Add or remove Students from groups.
+- Assign and revoke group permissions.
+- View administrative audit logs.
 
 ### 4.2 Student
 
-Student functionality is planned for the Beta release.
+Students are registered users who can access student-specific features.
 
-**Planned Beta responsibilities:**
+**Responsibilities:**
+
 - Register and log in.
-- Access features permitted by the Student role.
-- View their own profile and relevant dashboard information.
+- View and update their profile information.
+- Change their password.
+- Manage their active login sessions.
+- View available published quizzes.
+- Participate in published quizzes.
+- Submit answers to all questions in a quiz.
+- Receive automatically calculated quiz results.
+- View their own quiz attempt history.
+- Create groups.
+- Add or remove members from groups they own.
+- Update or delete their own groups.
+- View their group memberships and permissions.
+- Access resources when the required group permission is available.
 
-Quiz participation, answer submission, scoring, and attempt history will be included only if confirmed in the final project requirements and implemented.
+**Group ownership restriction:** A Student can update, delete, and manage members only in groups they own. Students cannot assign or revoke group permissions.
 
 ### 4.3 Guest
 
-A guest is a user who has not authenticated. Public access to quiz information will be defined as part of the Beta access-control design. The MVP is intended for local Admin-management demonstration, not public use.
+A guest is a user who has not authenticated.
+
+- Guests can access only the endpoints and information that do not require authentication.
+- Registration and login are available to allow guests to become authenticated users.
+- Protected Student and Admin operations require authentication and appropriate authorization.
 
 ## 5. User Stories
 
@@ -77,34 +107,48 @@ A guest is a user who has not authenticated. Public access to quiz information w
 
 - **US-01:** As an Admin, I want to create a quiz so that I can add new quiz content.
 - **US-02:** As an Admin, I want to view the quiz list so that I can manage existing quizzes.
-- **US-03:** As an Admin, I want to view a quiz's details so that I can inspect its information.
-- **US-04:** As an Admin, I want to update a quiz so that I can correct or modify its information.
+- **US-03:** As an Admin, I want to view quiz details so that I can inspect quiz information.
+- **US-04:** As an Admin, I want to update a quiz so that I can modify its information.
 - **US-05:** As an Admin, I want to delete a quiz so that unnecessary content can be removed.
-- **US-06:** As an Admin, I want to add questions to a quiz so that the quiz contains relevant questions.
-- **US-07:** As an Admin, I want to view questions so that I can review existing content.
-- **US-08:** As an Admin, I want to update questions so that I can correct question text or answer options.
-- **US-09:** As an Admin, I want to delete questions so that outdated questions can be removed.
+- **US-06:** As an Admin, I want to add questions to a quiz.
+- **US-07:** As an Admin, I want to view existing questions.
+- **US-08:** As an Admin, I want to update question text and answer options.
+- **US-09:** As an Admin, I want to delete outdated questions.
 
 ### 5.2 Admin User Stories — Beta
 
-- **US-10:** As an Admin, I want to log in so that I can access protected management features.
-- **US-11:** As an Admin, I want to access an Admin dashboard so that I can view administrative information.
-- **US-12:** As an Admin, I want to manage user accounts and roles so that users receive appropriate permissions.
-- **US-13:** As an Admin, I want protected operations to require appropriate permissions so that unauthorized users cannot perform administrative actions.
+- **US-10:** As an Admin, I want to log in securely to access protected features.
+- **US-11:** As an Admin, I want to access an Admin dashboard to view administrative information.
+- **US-12:** As an Admin, I want to manage user accounts and roles.
+- **US-13:** As an Admin, I want to activate, deactivate, ban, or unban user accounts.
+- **US-14:** As an Admin, I want to manage groups and their members.
+- **US-15:** As an Admin, I want to assign and revoke group permissions.
+- **US-16:** As an Admin, I want to view audit logs to review recorded administrative activities.
+- **US-17:** As an Admin, I want protected operations to require appropriate authorization.
 
 ### 5.3 Student User Stories — Beta
 
-- **US-14:** As a Student, I want to register and log in so that I can access my account.
-- **US-15:** As a Student, I want to view my profile so that I can access my account information.
-- **US-16:** As a Student, I want to see relevant personal dashboard information.
+- **US-18:** As a Student, I want to register and log in to access my account.
+- **US-19:** As a Student, I want to view and update my profile.
+- **US-20:** As a Student, I want to change my password and manage my login sessions.
+- **US-21:** As a Student, I want to view available published quizzes.
+- **US-22:** As a Student, I want to participate in a quiz and submit my answers.
+- **US-23:** As a Student, I want to receive my quiz score and result.
+- **US-24:** As a Student, I want to view my previous quiz attempts.
+- **US-25:** As a Student, I want to create my own groups.
+- **US-26:** As a Student, I want to add or remove members from groups I own.
+- **US-27:** As a Student, I want to update or delete groups I own.
+- **US-28:** As a Student, I want to view my group memberships and available permissions.
+- **US-29:** As a Student, I want to access group resources when I have the required permission.
 
 ### 5.4 User Story Summary
 
 | User Story | Feature | Release |
 |---|---|---|
 | US-01–US-09 | Quiz and question management | MVP |
-| US-10–US-13 | Admin authentication and administration | Beta |
-| US-14–US-16 | Student account and profile | Beta |
+| US-10–US-17 | Admin authentication and administration | Beta |
+| US-18–US-24 | Student account and quiz participation | Beta |
+| US-25–US-29 | Group management and permissions | Beta |
 
 ## 6. Scope and Release Plan
 
@@ -112,128 +156,194 @@ A guest is a user who has not authenticated. Public access to quiz information w
 
 The MVP includes:
 
-- React + TypeScript Admin interface.
-- FastAPI + Python backend.
+- React and TypeScript Admin interface.
+- FastAPI and Python backend.
 - REST API communication using JSON.
 - Quiz creation, listing, detail retrieval, updating, and deletion.
 - Question creation, retrieval, updating, and deletion.
-- SQLite database integration.
+- SQLAlchemy database integration.
+- SQLite local database support.
 - Input validation and basic error handling.
 - Local frontend and backend execution.
-- Local development-only protection for management endpoints.
+- Development-only access restriction for management endpoints.
 
 **MVP limitations:**
 
-- No user registration or login.
-- No production-ready authentication or RBAC.
-- No Student dashboard.
-- No quiz attempt or answer-submission workflow.
-- No backend score-calculation feature.
-- No implemented publish/unpublish workflow.
-- Management endpoints must not be exposed publicly without proper authentication and authorization.
+- No complete user authentication system.
+- No production-ready RBAC.
+- No Student quiz participation workflow.
+- No automated quiz scoring.
+- No Student group management.
+- No production-ready authorization for public management access.
 
 ### 6.2 Beta — Final Release
 
-The planned Beta scope includes:
+The implemented Beta scope extends the MVP with:
 
-- Admin authentication and login.
-- Secure password hashing.
-- Token-based authentication.
-- Admin and Student roles.
-- Role-Based Access Control (RBAC).
-- Permission scopes for protected operations.
-- Admin dashboard.
-- Authorized user-management functionality.
-- Student profile functionality.
-- Expanded validation and security testing.
-- Production database configuration.
-- Frontend and backend deployment.
+**Authentication and Account Management**
+- Student registration and login.
+- Admin login.
+- JWT-based access authentication.
+- Refresh-token session management.
+- Secure password hashing using Argon2 with password peppering.
+- Profile viewing and updating.
+- Password changing.
+- Logout and session revocation.
 
-Any additional student quiz-participation features will be added only if confirmed by the final requirements.
+**Authorization and Administration**
+- Admin and Student role separation.
+- Backend-enforced RBAC.
+- Protected API operations.
+- Admin dashboard statistics.
+- User listing and account management.
+- User role and status management.
+- User ban and unban functionality.
+- Administrative audit logs.
+
+**Group Management**
+- Admin group creation and management.
+- Admin member management.
+- Admin group permission assignment and revocation.
+- Student group creation.
+- Student owner-only group update and deletion.
+- Student owner-only member addition and removal.
+- Student group and permission retrieval.
+- Permission-protected group resources.
+
+**Student Quiz Participation**
+- Viewing available published quizzes.
+- Submitting answers to quizzes.
+- Validating submitted answers.
+- Automatic score calculation.
+- Saving quiz attempts and individual answers.
+- Viewing personal attempt history.
+
+**Database and Deployment**
+- Configurable database connection.
+- SQLite local fallback.
+- PostgreSQL deployment support.
+- Environment-based configuration.
+- Frontend and backend deployment configuration.
 
 ## 7. Functional Features
 
 | ID | Feature | Description | Release |
 |---|---|---|---|
-| F-01 | Quiz Listing | Display the available quiz records in the management interface. | MVP |
-| F-02 | Quiz Details | Retrieve and display an individual quiz's information. | MVP |
-| F-03 | Create Quiz | Create a quiz with its required information. | MVP |
+| F-01 | Quiz Listing | Display available quiz records. | MVP |
+| F-02 | Quiz Details | Retrieve individual quiz information. | MVP |
+| F-03 | Create Quiz | Create a quiz with required information. | MVP |
 | F-04 | Update Quiz | Modify existing quiz information. | MVP |
 | F-05 | Delete Quiz | Remove an existing quiz. | MVP |
 | F-06 | Create Question | Add an MCQ question to a quiz. | MVP |
-| F-07 | View Question | Retrieve an individual question for management. | MVP |
-| F-08 | Update Question | Modify question text, options, or correct-option information. | MVP |
+| F-07 | View Question | Retrieve an individual question. | MVP |
+| F-08 | Update Question | Modify question text, options, or correct answer. | MVP |
 | F-09 | Delete Question | Remove an existing question. | MVP |
 | F-10 | Input Validation | Validate incoming data and handle invalid requests. | MVP |
-| F-11 | Authentication | Authenticate registered users. | Beta |
+| F-11 | Authentication | Register and authenticate users. | Beta |
 | F-12 | RBAC | Enforce access according to user roles. | Beta |
-| F-13 | Permission Scopes | Enforce permissions for protected API operations. | Beta |
-| F-14 | Admin Dashboard | Provide administrative information and navigation. | Beta |
-| F-15 | User Management | Manage authorized user accounts and roles. | Beta |
-| F-16 | Student Profile | Provide personal account information. | Beta |
-| F-17 | Deployment | Deploy the application with appropriate security and database configuration. | Beta |
+| F-13 | Permission Scopes | Enforce group-based permissions for protected resources. | Beta |
+| F-14 | Admin Dashboard | Display administrative statistics. | Beta |
+| F-15 | User Management | Manage user accounts, roles, and status. | Beta |
+| F-16 | Student Profile | View and update personal account information. | Beta |
+| F-17 | Session Management | Refresh, revoke, and manage login sessions. | Beta |
+| F-18 | Group Management | Create, update, delete, and manage groups. | Beta |
+| F-19 | Group Membership | Add, remove, and view group members. | Beta |
+| F-20 | Group Permissions | Assign, revoke, and retrieve group permissions. | Beta |
+| F-21 | Quiz Attempts | Allow Students to submit answers to published quizzes. | Beta |
+| F-22 | Automatic Scoring | Calculate correct answers and quiz results. | Beta |
+| F-23 | Attempt History | Store and display a Student's own quiz attempts. | Beta |
+| F-24 | Audit Logging | Record relevant authentication and administrative activities. | Beta |
+| F-25 | Deployment | Support deployment with environment-based configuration. | Beta |
 
 ## 8. Non-Functional Requirements
 
-- **Usability:** The interface should be easy to understand and navigate.
-- **Performance:** Normal quiz and question management requests should respond promptly under typical demonstration workloads.
-- **Reliability:** Invalid requests and missing resources should return appropriate errors instead of crashing the application.
-- **Data Integrity:** Quiz and question information must be stored consistently.
-- **Security:** Protected operations must be authorized by the backend before public deployment.
-- **Maintainability:** Frontend components, backend routes, schemas, and database models should remain organized.
-- **Compatibility:** The application should work in modern web browsers.
-- **Scalability:** The architecture should allow future features to be added without requiring a complete redesign.
+- **Usability:** The interface should be easy to understand and navigate for both Admins and Students.
+- **Performance:** Normal application requests should respond promptly under typical academic demonstration workloads.
+- **Reliability:** Invalid requests and missing resources should return appropriate errors.
+- **Data Integrity:** Quiz, question, user, group, membership, and attempt records must maintain consistent relationships.
+- **Security:** Authentication and authorization must be enforced by the backend.
+- **Password Security:** Passwords must be stored as secure hashes rather than plaintext.
+- **Session Security:** Refresh tokens must be stored securely and support expiration and revocation.
+- **Maintainability:** Frontend components, API services, backend routers, schemas, services, and database models should remain organized.
+- **Compatibility:** The application should work in modern web browsers and supported development environments.
+- **Scalability:** The architecture should allow future functionality to be added without a complete redesign.
 
 ## 9. Out of Scope
 
-The following are not included in the current MVP:
+The following features are not included in the current implemented project scope:
 
-- Student quiz participation.
-- Answer submission and score calculation.
-- Quiz publishing and unpublishing.
-- User registration and login.
-- Student/Admin permission enforcement.
-- User profile and dashboard.
-- AI-generated questions or AI-based grading.
-- Live multiplayer competitions.
-- Real-time chat or video.
+- AI-generated questions.
+- AI-based grading.
+- Live multiplayer quiz competitions.
+- Real-time chat or video communication.
 - Payment or subscription functionality.
 - Native Android or iOS applications.
+- A complete quiz publishing and unpublishing management workflow.
+- Student assignment of group permissions.
+
+**Note:** The database retains an `is_published` field, and Student quiz attempts are restricted to published quizzes. However, a separate publish/unpublish management workflow is not implemented.
 
 ## 10. Success Criteria
 
-The MVP will be considered successful when:
+The MVP is considered successful when:
 
-1. The frontend can communicate with the FastAPI backend.
-2. The Admin interface can retrieve and display quiz records.
+1. The frontend communicates with the FastAPI backend.
+2. Quiz records can be retrieved and displayed.
 3. Quiz CRUD operations work through REST APIs.
 4. Question CRUD operations work through REST APIs.
 5. Quiz and question data persist in the database.
 6. Invalid input and missing resources are handled appropriately.
-7. The application can be started and demonstrated locally.
+7. The application can run locally.
 8. The GitHub feature branch and pull request follow the project workflow.
 
-The Beta will be considered successful when its planned authentication, authorization, dashboard, user-management, testing, and deployment requirements have been implemented and verified.
+The Beta is considered successful when:
+
+1. Admin and Student authentication work.
+2. Protected endpoints enforce authentication and authorization.
+3. Passwords are securely hashed.
+4. User roles and account status can be managed.
+5. Admin dashboard information is available.
+6. Admins can manage users and groups.
+7. Admins can assign and revoke group permissions.
+8. Students can create and manage their own groups.
+9. Students can participate in published quizzes.
+10. Quiz results are calculated and stored correctly.
+11. Students can view their own attempt history.
+12. Audit logs record relevant activities.
+13. The application supports the configured deployment database.
 
 ## 11. Assumptions and Constraints
 
-- React + TypeScript and FastAPI + Python are the required technologies.
-- The MVP is developed for a university course demonstration.
-- SQLite is used for local MVP data persistence.
-- The backend is responsible for data validation and database operations.
-- The MVP management access check is intended only for local development.
-- Authentication and production authorization must be implemented before exposing management endpoints publicly.
-- Beta requirements may be refined based on instructor feedback.
+- React and TypeScript are used for the frontend.
+- FastAPI and Python are used for the backend.
+- SQLAlchemy is used for database operations.
+- Pydantic schemas are used for request and response validation.
+- SQLite is the local development fallback database.
+- PostgreSQL is supported through the configured database URL.
+- The backend is responsible for authentication, authorization, validation, and database operations.
+- User roles are stored as `admin` and `user`; the application refers to ordinary users as Students.
+- Student group management is restricted to the group owner.
+- Group permissions are assigned and revoked by Admins.
+- Student quiz attempts require an authenticated Student account.
+- Students can view their own attempt history through the personal attempt endpoint.
 
 ## 12. Dependencies
 
 - Python and backend dependencies.
 - Node.js and npm.
-- React and TypeScript.
-- FastAPI and SQLAlchemy.
-- SQLite for local persistence.
+- React 19.3 and React DOM.
+- TypeScript 7.0.
+- Vite 8.3.
+- FastAPI.
+- SQLAlchemy.
+- Psycopg PostgreSQL driver.
+- pwdlib with Argon2 support.
+- PyJWT.
+- pytest for backend development testing.
+- SQLite for local development.
+- PostgreSQL for configured deployment.
 - Git and GitHub.
-- A suitable hosting platform and persistent database for Beta deployment.
+- Suitable frontend and backend hosting platforms.
 
 ## 13. Release Summary
 
@@ -244,16 +354,28 @@ The Beta will be considered successful when its planned authentication, authoriz
 | REST API integration | Included | Retained |
 | Quiz CRUD | Included | Retained |
 | Question CRUD | Included | Retained |
-| SQLite persistence | Included | Development database may be replaced |
+| SQLite persistence | Included | Local fallback |
+| PostgreSQL support | Not included | Included |
 | Local development | Included | Supported |
-| Authentication | Not included | Planned |
-| Admin/Student RBAC | Not included | Planned |
-| Permission scopes | Not included | Planned |
-| Admin dashboard | Not included | Planned |
-| User management | Not included | Planned |
-| Student profile | Not included | Planned |
-| Production deployment | Not included | Planned |
+| Authentication | Not included | Implemented |
+| Admin/Student RBAC | Not included | Implemented |
+| Group permissions | Not included | Implemented |
+| Admin dashboard | Not included | Implemented |
+| User management | Not included | Implemented |
+| Student profile | Not included | Implemented |
+| Group management | Not included | Implemented |
+| Quiz participation | Not included | Implemented |
+| Automatic scoring | Not included | Implemented |
+| Attempt history | Not included | Implemented |
+| Audit logging | Not included | Implemented |
+| Deployment configuration | Not included | Implemented |
 
 ## 14. Conclusion
 
-Quiz Game's MVP provides a functional foundation for quiz-content administration through a React and TypeScript frontend, a FastAPI backend, REST APIs, and database persistence. The Beta release will extend this foundation with authentication, role-based permissions, administrative features, and deployment.
+Quiz Game has evolved from an Admin-oriented quiz-management MVP into a web-based quiz management and participation platform.
+
+The MVP established quiz and question CRUD operations through a React and TypeScript frontend, FastAPI backend, REST APIs, and database persistence.
+
+The Beta extends this foundation with authentication, RBAC, user management, group management, permission scopes, Student quiz participation, automatic scoring, attempt history, audit logging, and deployment configuration.
+
+The application provides separate experiences for Admins and Students while enforcing access restrictions through backend authorization.
