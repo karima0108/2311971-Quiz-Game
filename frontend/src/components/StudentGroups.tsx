@@ -461,24 +461,26 @@ function StudentGroups() {
               <div className="group-subsection">
                 <h3>Manage Group</h3>
 
-                <button
-                  type="button"
-                  onClick={() => startEditing(selectedGroup)}
-                  disabled={actionLoading}
-                >
-                  Edit Group
-                </button>
+                <div className="group-action-buttons">
+                  <button
+                    type="button"
+                    onClick={() => startEditing(selectedGroup)}
+                    disabled={actionLoading}
+                  >
+                    Edit Group
+                  </button>
 
-                <button
-                  type="button"
-                  className="danger-button"
-                  onClick={() =>
-                    void handleDeleteGroup(selectedGroup.id)
-                  }
-                  disabled={actionLoading}
-                >
-                  Delete Group
-                </button>
+                  <button
+                    type="button"
+                    className="danger-button"
+                    onClick={() =>
+                      void handleDeleteGroup(selectedGroup.id)
+                    }
+                    disabled={actionLoading}
+                  >
+                    Delete Group
+                  </button>
+                </div>
 
                 {editingGroupId === selectedGroup.id && (
                   <form

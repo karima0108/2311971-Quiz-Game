@@ -313,3 +313,149 @@ def test_admin_dashboard_statistics(
     assert data["banned_users"] == 1
     assert data["total_quizzes"] == 1
     assert data["published_quizzes"] == 1
+
+
+# =========================
+# BULK BAN / UNBAN TESTS
+# =========================
+
+def test_admin_can_bulk_ban_students(
+    client, db_session, admin_headers, student_user, another_student
+):
+    response = client.post(
+        "/api/admin/users/bulk-ban",
+        headers=admin_headers,
+        json={
+            "user_ids": [student_user.id, another_student.id],
+            "reason": "Violation of community rules",
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["success_count"] == 2
+    assert data["failed_count"] == 0
+    assert set(data["processed_user_ids"]) == {
+        student_user.id,
+        another_student.id,
+    }
+    assert data["skipped"] == []
+
+    db_session.refresh(student_user)
+    db_session.refresh(another_student)
+
+    assert student_user.is_banned is True
+    assert student_user.ban_reason == "Violation of community rules"
+    assert another_student.is_banned is True
+
+
+def test_admin_can_bulk_unban_students(
+    client, db_session, admin_headers, student_user, another_student, admin_user
+):
+    student_user.is_banned = True
+    student_user.ban_reason = "Previous violation"
+    student_user.banned_by = admin_user.id
+
+    another_student.is_banned = True
+    another_student.ban_reason = "Another violation"
+    another_student.banned_by = admin_user.id
+
+    db_session.commit()
+
+    response = client.post(
+        "/api/admin/users/bulk-unban",
+        headers=admin_headers,
+        json={
+            "user_ids": [student_user.id, another_student.id],
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["success_count"] == 2
+    assert data["failed_count"] == 0
+    assert set(data["processed_user_ids"]) == {
+        student_user.id,
+        another_student.id,
+    }
+
+    db_session.refresh(student_user)
+    db_session.refresh(another_student)
+
+    assert student_user.is_banned is False
+    assert student_user.ban_reason is None
+    assert student_user.banned_at is None
+    assert student_user.banned_by is None
+
+    assert another_student.is_banned is False
+    assert another_student.ban_reason is None
+
+
+def test_student_cannot_access_bulk_ban_or_unban(
+    client, student_headers, another_student
+):
+    ban_response = client.post(
+        "/api/admin/users/bulk-ban",
+        headers=student_headers,
+        json={
+            "user_ids": [another_student.id],
+            "reason": "Testing unauthorized access",
+        },
+    )
+
+    unban_response = client.post(
+        "/api/admin/users/bulk-unban",
+        headers=student_headers,
+        json={
+            "user_ids": [another_student.id],
+        },
+    )
+
+    assert ban_response.status_code == 403
+    assert unban_response.status_code == 403
+
+
+def test_bulk_ban_skips_own_account_and_other_admin(
+    client, db_session, admin_headers, admin_user
+):
+    another_admin = User(
+        email="bulk-test-admin@example.com",
+        hashed_password="test-password",
+        role="admin",
+        is_active=True,
+    )
+    db_session.add(another_admin)
+    db_session.commit()
+    db_session.refresh(another_admin)
+
+    response = client.post(
+        "/api/admin/users/bulk-ban",
+        headers=admin_headers,
+        json={
+            "user_ids": [admin_user.id, another_admin.id],
+            "reason": "Testing admin protection",
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["success_count"] == 0
+    assert data["failed_count"] == 2
+    assert data["processed_user_ids"] == []
+    assert len(data["skipped"]) == 2
+
+    skipped_reasons = {
+        item["reason"] for item in data["skipped"]
+    }
+
+    assert "Cannot ban your own account" in skipped_reasons
+    assert "Cannot ban an admin" in skipped_reasons
+
+    db_session.refresh(admin_user)
+    db_session.refresh(another_admin)
+
+    assert admin_user.is_banned is False
+    assert another_admin.is_banned is False

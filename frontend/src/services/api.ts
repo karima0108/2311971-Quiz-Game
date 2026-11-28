@@ -381,6 +381,40 @@ export async function unbanUser(
   })
 }
 
+export interface BulkUserActionResponse {
+  success_count: number
+  failed_count: number
+  processed_user_ids: number[]
+  skipped: {
+    user_id: number
+    reason: string
+  }[]
+}
+
+export async function bulkBanUsers(
+  userIds: number[],
+  reason: string,
+): Promise<BulkUserActionResponse> {
+  return apiRequest<BulkUserActionResponse>("/admin/users/bulk-ban", {
+    method: "POST",
+    body: JSON.stringify({
+      user_ids: userIds,
+      reason,
+    }),
+  })
+}
+
+export async function bulkUnbanUsers(
+  userIds: number[],
+): Promise<BulkUserActionResponse> {
+  return apiRequest<BulkUserActionResponse>("/admin/users/bulk-unban", {
+    method: "POST",
+    body: JSON.stringify({
+      user_ids: userIds,
+    }),
+  })
+}
+
 // Change a user's role.
 export async function changeUserRole(
   userId: number,

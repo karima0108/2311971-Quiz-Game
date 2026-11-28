@@ -1,12 +1,15 @@
-﻿
-import { useEffect, useState } from "react"
+﻿import { useEffect, useState } from "react"
+import type { FormEvent } from "react"
 import { useAuth } from "../context/AuthContext"
+
 import {
   getUsers,
   getUserDetails,
   updateUserStatus,
   banUser,
   unbanUser,
+  bulkBanUsers,
+  bulkUnbanUsers,
   changeUserRole,
   type ApiUser,
 } from "../services/api"
@@ -15,6 +18,8 @@ export default function UserManagement() {
   const { user } = useAuth()
 
   const [users, setUsers] = useState<ApiUser[]>([])
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([])
+
   const [search, setSearch] = useState("")
   const [appliedSearch, setAppliedSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState<"" | "user" | "admin">("")
@@ -34,6 +39,38 @@ export default function UserManagement() {
 
   const [selectedUser, setSelectedUser] = useState<ApiUser | null>(null)
   const [detailsLoading, setDetailsLoading] = useState(false)
+
+  // Only regular users can be selected for bulk actions.
+  const selectableUsers = users.filter(
+    (targetUser) =>
+      targetUser.role !== "admin" && targetUser.id !== user?.id,
+  )
+
+  const selectedUsers = selectableUsers.filter((targetUser) =>
+    selectedUserIds.includes(targetUser.id),
+  )
+
+  const selectedBanUserIds = selectedUsers
+    .filter((targetUser) => !targetUser.is_banned)
+    .map((targetUser) => targetUser.id)
+
+  const selectedUnbanUserIds = selectedUsers
+    .filter((targetUser) => targetUser.is_banned)
+    .map((targetUser) => targetUser.id)
+
+  function handleUserSelection(userId: number, checked: boolean) {
+    setSelectedUserIds((current) =>
+      checked
+        ? [...new Set([...current, userId])]
+        : current.filter((id) => id !== userId),
+    )
+  }
+
+  function handleSelectAllUsers(checked: boolean) {
+    setSelectedUserIds(
+      checked ? selectableUsers.map((targetUser) => targetUser.id) : [],
+    )
+  }
 
   async function loadUsers(
     searchTerm = appliedSearch,
@@ -67,13 +104,14 @@ export default function UserManagement() {
     void loadUsers("", "", "", 1)
   }, [])
 
-  async function handleSearch(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     setAppliedSearch(search)
     setPage(1)
     setMessage("")
     setSelectedUser(null)
+    setSelectedUserIds([])
 
     await loadUsers(search, roleFilter, statusFilter, 1)
   }
@@ -82,6 +120,7 @@ export default function UserManagement() {
     setRoleFilter(value)
     setPage(1)
     setSelectedUser(null)
+    setSelectedUserIds([])
 
     await loadUsers(appliedSearch, value, statusFilter, 1)
   }
@@ -92,6 +131,7 @@ export default function UserManagement() {
     setStatusFilter(value)
     setPage(1)
     setSelectedUser(null)
+    setSelectedUserIds([])
 
     await loadUsers(appliedSearch, roleFilter, value, 1)
   }
@@ -101,6 +141,7 @@ export default function UserManagement() {
 
     setPage(nextPage)
     setSelectedUser(null)
+    setSelectedUserIds([])
 
     await loadUsers(appliedSearch, roleFilter, statusFilter, nextPage)
   }
@@ -220,6 +261,82 @@ export default function UserManagement() {
     }
   }
 
+  // Bulk Ban
+  async function handleBulkBan() {
+    if (selectedBanUserIds.length === 0) return
+
+    const reason = window.prompt(
+      `Enter a reason for banning ${selectedBanUserIds.length} selected user(s):`,
+    )
+
+    if (reason === null) return
+
+    if (reason.trim().length < 3) {
+      setError("Ban reason must contain at least 3 characters.")
+      return
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to ban ${selectedBanUserIds.length} selected user(s)?`,
+    )
+
+    if (!confirmed) return
+
+    setMessage("")
+    setError("")
+
+    try {
+      setLoading(true)
+
+      const result = await bulkBanUsers(
+        selectedBanUserIds,
+        reason.trim(),
+      )
+
+      setMessage(
+        `Bulk ban completed: ${result.success_count} successful, ${result.failed_count} skipped.`,
+      )
+
+      setSelectedUserIds([])
+      await loadUsers()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bulk ban failed.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Bulk Unban
+  async function handleBulkUnban() {
+    if (selectedUnbanUserIds.length === 0) return
+
+    const confirmed = window.confirm(
+      `Are you sure you want to unban ${selectedUnbanUserIds.length} selected user(s)?`,
+    )
+
+    if (!confirmed) return
+
+    setMessage("")
+    setError("")
+
+    try {
+      setLoading(true)
+
+      const result = await bulkUnbanUsers(selectedUnbanUserIds)
+
+      setMessage(
+        `Bulk unban completed: ${result.success_count} successful, ${result.failed_count} skipped.`,
+      )
+
+      setSelectedUserIds([])
+      await loadUsers()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bulk unban failed.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handlePromoteToAdmin(targetUser: ApiUser) {
     const confirmed = window.confirm(
       `Are you sure you want to promote ${targetUser.email} to Admin?`,
@@ -239,6 +356,10 @@ export default function UserManagement() {
         `${targetUser.email} has been promoted to Admin successfully.`,
       )
 
+      setSelectedUserIds((current) =>
+        current.filter((id) => id !== targetUser.id),
+      )
+
       await loadUsers()
     } catch (err) {
       setError(
@@ -254,9 +375,7 @@ export default function UserManagement() {
       <div className="section-heading">
         <div>
           <h2>User Management</h2>
-          <p>
-            Search, filter, view details and manage user accounts.
-          </p>
+          <p>Search, filter, view details and manage user accounts.</p>
         </div>
       </div>
 
@@ -297,6 +416,7 @@ export default function UserManagement() {
               setPage(1)
               setMessage("")
               setSelectedUser(null)
+              setSelectedUserIds([])
               void loadUsers("", "", "", 1)
             }}
             disabled={loading}
@@ -359,11 +479,75 @@ export default function UserManagement() {
           <button
             type="button"
             className="secondary"
-            onClick={() => void loadUsers()}
+            onClick={() => {
+              setSelectedUserIds([])
+              void loadUsers()
+            }}
             disabled={loading}
           >
             Refresh
           </button>
+        </div>
+
+        {/* Bulk action controls */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: "12px",
+            marginBottom: "16px",
+          }}
+        >
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={
+                selectableUsers.length > 0 &&
+                selectableUsers.every((targetUser) =>
+                  selectedUserIds.includes(targetUser.id),
+                )
+              }
+              onChange={(event) => handleSelectAllUsers(event.target.checked)}
+              disabled={loading || selectableUsers.length === 0}
+            />
+            Select All Eligible Users ({selectableUsers.length})
+          </label>
+
+          <button
+            type="button"
+            className="danger"
+            onClick={() => void handleBulkBan()}
+            disabled={loading || selectedBanUserIds.length === 0}
+          >
+            Bulk Ban ({selectedBanUserIds.length})
+          </button>
+
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => void handleBulkUnban()}
+            disabled={loading || selectedUnbanUserIds.length === 0}
+          >
+            Bulk Unban ({selectedUnbanUserIds.length})
+          </button>
+
+          {selectedUserIds.length > 0 && (
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => setSelectedUserIds([])}
+              disabled={loading}
+            >
+              Clear Selection
+            </button>
+          )}
         </div>
 
         {loading ? (
@@ -381,6 +565,30 @@ export default function UserManagement() {
               return (
                 <div className="admin-card" key={targetUser.id}>
                   <div>
+                    {!isAdmin && !isCurrentUser && (
+                      <label
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUserIds.includes(targetUser.id)}
+                          onChange={(event) =>
+                            handleUserSelection(
+                              targetUser.id,
+                              event.target.checked,
+                            )
+                          }
+                          disabled={loading || isUpdating}
+                        />
+                        Select for bulk action
+                      </label>
+                    )}
+
                     <strong>{targetUser.name || "Unnamed User"}</strong>
                     <p>{targetUser.email}</p>
 
@@ -456,9 +664,11 @@ export default function UserManagement() {
                         <p>
                           Banned: {selectedUser.is_banned ? "Yes" : "No"}
                         </p>
+
                         {selectedUser.banned_by !== null && (
                           <p>Banned by Admin ID: {selectedUser.banned_by}</p>
                         )}
+
                         <p>
                           Joined:{" "}
                           {new Date(selectedUser.created_at).toLocaleString()}

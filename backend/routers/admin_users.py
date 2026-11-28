@@ -26,6 +26,13 @@ class ChangeRoleRequest(BaseModel):
     role: str = Field(pattern="^(user|admin)$")
 
 
+class BulkUserRequest(BaseModel):
+    user_ids: list[int] = Field(min_length=1, max_length=100)
+
+
+class BulkBanUserRequest(BulkUserRequest):
+    reason: str = Field(min_length=3, max_length=1000)
+
 @router.get("")
 def list_users(
     search: str | None = Query(default=None, max_length=255),
@@ -357,6 +364,164 @@ def unban_user(
 
     return target_user
 
+@router.post("/bulk-ban")
+def bulk_ban_users(
+    request: BulkBanUserRequest,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+):
+    reason = request.reason.strip()
+
+    if len(reason) < 3:
+        raise HTTPException(
+            status_code=422,
+            detail="Ban reason must contain at least 3 characters",
+        )
+
+    now = datetime.now(timezone.utc)
+
+    processed_user_ids = []
+    skipped = []
+
+    try:
+        for user_id in dict.fromkeys(request.user_ids):
+            target_user = db.query(User).filter(
+                User.id == user_id
+            ).first()
+
+            if not target_user:
+                skipped.append({
+                    "user_id": user_id,
+                    "reason": "User not found",
+                })
+                continue
+
+            if target_user.id == current_admin.id:
+                skipped.append({
+                    "user_id": user_id,
+                    "reason": "Cannot ban your own account",
+                })
+                continue
+
+            if target_user.role == "admin":
+                skipped.append({
+                    "user_id": user_id,
+                    "reason": "Cannot ban an admin",
+                })
+                continue
+
+            if target_user.is_banned:
+                skipped.append({
+                    "user_id": user_id,
+                    "reason": "User is already banned",
+                })
+                continue
+
+            target_user.is_banned = True
+            target_user.ban_reason = reason
+            target_user.banned_at = now
+            target_user.banned_by = current_admin.id
+
+            db.query(RefreshSession).filter(
+                RefreshSession.user_id == target_user.id,
+                RefreshSession.revoked_at.is_(None),
+            ).update(
+                {"revoked_at": now},
+                synchronize_session=False,
+            )
+
+            db.add(AuditLog(
+                actor_id=current_admin.id,
+                action="user.banned",
+                target_type="user",
+                target_id=str(target_user.id),
+                description=f"Admin bulk-banned user {target_user.email}",
+                details={
+                    "reason": reason,
+                    "bulk_action": True,
+                },
+            ))
+
+            processed_user_ids.append(user_id)
+
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        raise
+
+    return {
+        "success_count": len(processed_user_ids),
+        "failed_count": len(skipped),
+        "processed_user_ids": processed_user_ids,
+        "skipped": skipped,
+    }
+
+
+@router.post("/bulk-unban")
+def bulk_unban_users(
+    request: BulkUserRequest,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+):
+    processed_user_ids = []
+    skipped = []
+
+    try:
+        for user_id in dict.fromkeys(request.user_ids):
+            target_user = db.query(User).filter(
+                User.id == user_id
+            ).first()
+
+            if not target_user:
+                skipped.append({
+                    "user_id": user_id,
+                    "reason": "User not found",
+                })
+                continue
+
+            if target_user.role == "admin":
+                skipped.append({
+                    "user_id": user_id,
+                    "reason": "Admin accounts cannot be unbanned",
+                })
+                continue
+
+            if not target_user.is_banned:
+                skipped.append({
+                    "user_id": user_id,
+                    "reason": "User is not banned",
+                })
+                continue
+
+            target_user.is_banned = False
+            target_user.ban_reason = None
+            target_user.banned_at = None
+            target_user.banned_by = None
+
+            db.add(AuditLog(
+                actor_id=current_admin.id,
+                action="user.unbanned",
+                target_type="user",
+                target_id=str(target_user.id),
+                description=f"Admin bulk-unbanned user {target_user.email}",
+                details={"bulk_action": True},
+            ))
+
+            processed_user_ids.append(user_id)
+
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        raise
+
+    return {
+        "success_count": len(processed_user_ids),
+        "failed_count": len(skipped),
+        "processed_user_ids": processed_user_ids,
+        "skipped": skipped,
+    }
 
 
 
