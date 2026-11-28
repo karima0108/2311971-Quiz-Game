@@ -139,7 +139,7 @@ export async function updateMyProfile(
   name: string,
 ): Promise<ApiUser> {
   return apiRequest<ApiUser>("/auth/me", {
-    method: "PUT",
+    method: "PATCH",
     body: JSON.stringify({ name }),
   })
 }

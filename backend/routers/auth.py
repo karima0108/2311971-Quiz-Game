@@ -283,7 +283,7 @@ def get_my_profile(
 # UPDATE CURRENT USER PROFILE
 # =========================
 
-@router.put("/me", response_model=UserResponse)
+@router.patch("/me", response_model=UserResponse)
 def update_my_profile(
     data: UserProfileUpdate,
     current_user: User = Depends(get_current_user),
