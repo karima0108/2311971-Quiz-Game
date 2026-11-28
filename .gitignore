@@ -20,3 +20,4 @@ dist/
 
 # Backup files
 * copy.*
+.vercel

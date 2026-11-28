@@ -31,6 +31,7 @@ import { useAuth } from "./context/AuthContext";
 
 function App() {
   const { user, loading: authLoading, isAuthenticated, logout } = useAuth();
+
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [activePage, setActivePage] = useState<
     | "dashboard"
@@ -307,6 +308,7 @@ function App() {
     setQuestionText("");
     setOptions(["", "", "", ""]);
     setCorrectOption(0);
+    clearMessages();
   }
 
   if (authLoading) {
@@ -342,114 +344,8 @@ function App() {
     );
   }
 
-  return (
-    <main className={`app ${user?.role === "admin" ? "theme-admin" : "theme-student"}`}>
-      <header className="topbar">
-        <div>
-          <h1>Quiz Game</h1>
-          <p>{user?.email} · Role: {user?.role}</p>
-        </div>
-
-        <nav className="app-navigation">
-          <button
-            type="button"
-            className={activePage === "profile" ? "" : "secondary"}
-            onClick={() => setActivePage("profile")}
-          >
-            My Profile
-          </button>
-
-          {user?.role === "user" && (
-            <>
-              <button
-                type="button"
-                className={activePage === "attempt-history" ? "" : "secondary"}
-                onClick={() => setActivePage("attempt-history")}
-              >
-                My Quiz History
-              </button>
-
-              <button
-                type="button"
-                className={activePage === "my-groups" ? "" : "secondary"}
-                onClick={() => setActivePage("my-groups")}
-              >
-                My Groups
-              </button>
-            </>
-          )}
-
-          <button
-            type="button"
-            className={activePage === "dashboard" ? "" : "secondary"}
-            onClick={() => setActivePage("dashboard")}
-          >
-            Dashboard
-          </button>
-
-          {user?.role === "admin" && (
-            <>
-              <button
-                type="button"
-                className={activePage === "admin-dashboard" ? "" : "secondary"}
-                onClick={() => setActivePage("admin-dashboard")}
-              >
-                Admin Dashboard
-              </button>
-
-              <button
-                type="button"
-                className={activePage === "admins" ? "" : "secondary"}
-                onClick={() => setActivePage("admins")}
-              >
-                Admin Management
-              </button>
-
-              <button
-                type="button"
-                className={activePage === "groups" ? "" : "secondary"}
-                onClick={() => setActivePage("groups")}
-              >
-                Group Management
-              </button>
-
-              <button
-                type="button"
-                className={activePage === "user-management" ? "" : "secondary"}
-                onClick={() => setActivePage("user-management")}
-              >
-                User Management
-              </button>
-
-              <button
-                type="button"
-                className={activePage === "audit-logs" ? "" : "secondary"}
-                onClick={() => setActivePage("audit-logs")}
-              >
-                Audit Logs
-              </button>
-            </>
-          )}
-        </nav>
-
-        <button
-          className="secondary"
-          type="button"
-          onClick={() => { void logout(); }}
-        >
-          Logout
-        </button>
-
-        <button
-          className="secondary"
-          type="button"
-          onClick={() => { void loadQuizzes(); }}
-          disabled={loading}
-        >
-          {loading ? "Refreshing..." : "Refresh"}
-        </button>
-      </header>
-
+  const pageContent = (
+    <>
       {user?.role === "user" && attemptResult && activePage === "dashboard" ? (
         <section className="panel">
           <div className="section-heading">
@@ -464,17 +360,14 @@ function App() {
               <span>Score</span>
               <strong>{attemptResult.score}/{attemptResult.total_questions}</strong>
             </div>
-
             <div className="profile-detail">
               <span>Correct Answers</span>
               <strong>{attemptResult.correct_answers}</strong>
             </div>
-
             <div className="profile-detail">
               <span>Total Questions</span>
               <strong>{attemptResult.total_questions}</strong>
             </div>
-
             <div className="profile-detail">
               <span>Submitted At</span>
               <strong>{new Date(attemptResult.submitted_at).toLocaleString()}</strong>
@@ -582,8 +475,228 @@ function App() {
           )}
         </>
       )}
+    </>
+  );
 
-      <footer>Quiz Game · Admin Management MVP</footer>
+  return (
+    <main className={`app ${user?.role === "admin" ? "theme-admin" : "theme-student"}`}>
+      {user?.role === "admin" ? (
+        <div className="admin-layout">
+          <aside className="admin-sidebar">
+            <div className="admin-sidebar-brand">
+              <h2>Quizzy</h2>
+              <p>Admin Panel</p>
+            </div>
+
+            <nav className="admin-sidebar-navigation">
+              <button
+                type="button"
+                className={activePage === "admin-dashboard" ? "" : "secondary"}
+                onClick={() => setActivePage("admin-dashboard")}
+              >
+                Admin Dashboard
+              </button>
+
+              <button
+                type="button"
+                className={activePage === "dashboard" ? "" : "secondary"}
+                onClick={() => setActivePage("dashboard")}
+              >
+                Quiz Management
+              </button>
+
+              <button
+                type="button"
+                className={activePage === "admins" ? "" : "secondary"}
+                onClick={() => setActivePage("admins")}
+              >
+                Admin Management
+              </button>
+
+              <button
+                type="button"
+                className={activePage === "groups" ? "" : "secondary"}
+                onClick={() => setActivePage("groups")}
+              >
+                Group Management
+              </button>
+
+              <button
+                type="button"
+                className={activePage === "user-management" ? "" : "secondary"}
+                onClick={() => setActivePage("user-management")}
+              >
+                User Management
+              </button>
+
+              <button
+                type="button"
+                className={activePage === "audit-logs" ? "" : "secondary"}
+                onClick={() => setActivePage("audit-logs")}
+              >
+                Audit Logs
+              </button>
+            </nav>
+
+            <div className="admin-sidebar-bottom">
+              <button
+                type="button"
+                className={activePage === "profile" ? "" : "secondary"}
+                onClick={() => setActivePage("profile")}
+              >
+                My Profile
+              </button>
+
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => {
+                  void logout();
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          </aside>
+
+          <section className="admin-main">
+            <div className="admin-welcome">
+              <h1>Welcome to Admin</h1>
+              <p>Manage your quiz platform from one place.</p>
+            </div>
+
+            <header className="admin-main-header">
+              <div>
+                <h1>
+                  {activePage === "admin-dashboard"
+                    ? "Admin Dashboard"
+                    : activePage === "dashboard"
+                      ? "Quiz Management"
+                      : activePage === "admins"
+                        ? "Admin Management"
+                        : activePage === "groups"
+                          ? "Group Management"
+                          : activePage === "user-management"
+                            ? "User Management"
+                            : activePage === "audit-logs"
+                              ? "Audit Logs"
+                              : "My Profile"}
+                </h1>
+                <p>{user.email}</p>
+              </div>
+
+              <button
+                className="secondary"
+                type="button"
+                onClick={() => {
+                  void loadQuizzes();
+                }}
+                disabled={loading}
+              >
+                {loading ? "Refreshing..." : "Refresh"}
+              </button>
+            </header>
+
+            {pageContent}
+
+            <footer>Quiz Game · Admin Management MVP</footer>
+          </section>
+        </div>
+      ) : (
+        <div className="student-layout">
+          <aside className="student-sidebar">
+            <div className="student-sidebar-brand">
+              <h2>Quiz Game</h2>
+              <p>Student Panel</p>
+            </div>
+
+            <nav className="student-sidebar-navigation">
+              <button
+                type="button"
+                className={activePage === "dashboard" ? "" : "secondary"}
+                onClick={() => setActivePage("dashboard")}
+              >
+                Dashboard
+              </button>
+
+              <button
+                type="button"
+                className={activePage === "attempt-history" ? "" : "secondary"}
+                onClick={() => setActivePage("attempt-history")}
+              >
+                My Quiz History
+              </button>
+
+              <button
+                type="button"
+                className={activePage === "my-groups" ? "" : "secondary"}
+                onClick={() => setActivePage("my-groups")}
+              >
+                My Groups
+              </button>
+            </nav>
+
+            <div className="student-sidebar-bottom">
+              <button
+                type="button"
+                className={activePage === "profile" ? "" : "secondary"}
+                onClick={() => setActivePage("profile")}
+              >
+                My Profile
+              </button>
+
+              <button
+                className="secondary"
+                type="button"
+                onClick={() => {
+                  void logout();
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          </aside>
+
+          <section className="student-main">
+            <div className="student-welcome">
+              <h1>Welcome</h1>
+              <p>Welcome back! Ready to continue your quiz journey?</p>
+            </div>
+
+            <header className="student-main-header">
+              <div>
+                <h1>
+                  {activePage === "dashboard"
+                    ? "Dashboard"
+                    : activePage === "attempt-history"
+                      ? "My Quiz History"
+                      : activePage === "my-groups"
+                        ? "My Groups"
+                        : "My Profile"}
+                </h1>
+                <p>
+                  {user?.email} · Role: {user?.role}
+                </p>
+              </div>
+
+              <button
+                className="secondary"
+                type="button"
+                onClick={() => {
+                  void loadQuizzes();
+                }}
+                disabled={loading}
+              >
+                {loading ? "Refreshing..." : "Refresh"}
+              </button>
+            </header>
+
+            {pageContent}
+
+            <footer>Quiz Game · Student Panel</footer>
+          </section>
+        </div>
+      )}
     </main>
   );
 }

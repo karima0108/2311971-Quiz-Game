@@ -1356,3 +1356,609 @@ body:has(.app.theme-student) {
     flex-direction: column;
   }
 }
+
+.group-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  width: 100%;
+  padding-right: 65px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  padding: 5px 8px;
+  border: none;
+  background: transparent;
+  color: #c45b83;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.password-toggle:hover {
+  color: #963d63;
+  background: transparent;
+}
+
+
+/* ========================================
+   ADMIN LAYOUT
+======================================== */
+
+.app.theme-admin:has(.admin-layout) {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  margin: 0;
+  padding: 24px;
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 24px;
+  width: 100%;
+  min-height: calc(100vh - 48px);
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+/* Sidebar */
+
+.admin-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 48px);
+  padding: 25px 18px;
+  background: #ffffff;
+  border: 1px solid #f1d5df;
+  border-radius: 18px;
+  box-shadow: 0 5px 20px rgba(180, 90, 120, 0.07);
+}
+
+.admin-sidebar-brand {
+  padding: 5px 10px 25px;
+  border-bottom: 1px solid #f3e2e8;
+  margin-bottom: 22px;
+}
+
+.admin-sidebar-brand h2 {
+  margin: 0;
+  color: #c45b83;
+  font-size: 27px;
+  font-weight: 750;
+}
+
+.admin-sidebar-brand p {
+  margin: 5px 0 0;
+  color: #8b7180;
+  font-size: 13px;
+}
+
+/* Sidebar Navigation */
+
+.admin-sidebar-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-sidebar-navigation button,
+.admin-sidebar-bottom button {
+  width: 100%;
+  min-height: 43px;
+  text-align: left;
+  justify-content: flex-start;
+  padding-left: 15px;
+}
+
+.admin-sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 22px;
+  border-top: 1px solid #f3e2e8;
+}
+
+/* Main Content */
+
+.admin-main {
+  min-width: 0;
+  padding: 5px 0;
+}
+
+.admin-main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 28px;
+  padding: 23px 26px;
+  background: #ffffff;
+  border: 1px solid #f1d5df;
+  border-radius: 18px;
+  box-shadow: 0 5px 20px rgba(180, 90, 120, 0.06);
+}
+
+.admin-main-header h1 {
+  margin: 0;
+  color: #573b49;
+  font-size: 25px;
+  font-weight: 700;
+}
+
+.admin-main-header p {
+  margin: 7px 0 0;
+  color: #8b7180;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.admin-main > footer {
+  margin-top: 35px;
+  padding: 18px 5px;
+  color: #987f8b;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Responsive Layout */
+
+@media (max-width: 900px) {
+  .admin-layout {
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .admin-sidebar {
+    padding: 20px 12px;
+  }
+
+  .admin-main-header {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 650px) {
+  .app.theme-admin:has(.admin-layout) {
+    padding: 12px;
+  }
+
+  .admin-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-height: auto;
+  }
+
+  .admin-sidebar {
+    min-height: auto;
+    padding: 17px;
+  }
+
+  .admin-sidebar-brand {
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+  }
+
+  .admin-sidebar-navigation {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .admin-sidebar-navigation button,
+  .admin-sidebar-bottom button {
+    min-width: 0;
+    padding-left: 10px;
+    font-size: 12px;
+  }
+
+  .admin-sidebar-bottom {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 16px;
+    padding-top: 15px;
+  }
+
+  .admin-main {
+    padding: 0;
+  }
+
+  .admin-main-header {
+    align-items: flex-start;
+    padding: 17px;
+    margin-bottom: 20px;
+  }
+
+  .admin-main-header h1 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-sidebar-navigation {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Admin welcome heading */
+.admin-welcome {
+  margin: 0 0 20px;
+  padding: 4px 2px;
+}
+
+.admin-welcome h1 {
+  margin: 0;
+  color: #573b49;
+  font-size: 27px;
+  font-weight: 750;
+}
+
+.admin-welcome p {
+  margin: 7px 0 0;
+  color: #8b7180;
+  font-size: 14px;
+}
+
+/* Keep profile and logout closer to navigation */
+.admin-sidebar-bottom {
+  margin-top: 36px;
+}
+
+/* Mobile spacing */
+@media (max-width: 650px) {
+  .admin-welcome {
+    margin-bottom: 15px;
+  }
+
+  .admin-welcome h1 {
+    font-size: 23px;
+  }
+}
+
+
+/* Profile form submit button spacing */
+.profile-form > button[type="submit"] {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+
+/* ==================================
+   STUDENT SIDEBAR LAYOUT
+================================== */
+
+.app.theme-student:has(.student-layout) {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  margin: 0;
+  padding: 24px;
+}
+
+.student-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 24px;
+  width: 100%;
+  min-height: calc(100vh - 48px);
+}
+
+/* Student Sidebar */
+
+.student-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 48px);
+  padding: 25px 18px;
+  background: #ffffff;
+  border: 1px solid #dce8f3;
+  border-radius: 18px;
+  box-shadow: 0 5px 20px rgba(85, 145, 200, 0.10);
+}
+
+.student-sidebar-brand {
+  padding: 5px 10px 25px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid #e1edf7;
+}
+
+.student-sidebar-brand h2 {
+  margin: 0;
+  color: #477fae;
+  font-size: 27px;
+  font-weight: 750;
+}
+
+.student-sidebar-brand p {
+  margin: 5px 0 0;
+  color: #718ba3;
+  font-size: 13px;
+}
+
+/* Student Navigation */
+
+.student-sidebar-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.student-sidebar-navigation button,
+.student-sidebar-bottom button {
+  width: 100%;
+  min-height: 43px;
+  text-align: left;
+  justify-content: flex-start;
+  padding-left: 15px;
+}
+
+/* Profile and Logout */
+
+.student-sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 36px;
+  padding-top: 22px;
+  border-top: 1px solid #e1edf7;
+}
+
+/* Student Main Content */
+
+.student-main {
+  min-width: 0;
+  padding: 5px 0;
+}
+
+.student-welcome {
+  margin: 0 0 20px;
+  padding: 4px 2px;
+}
+
+.student-welcome h1 {
+  margin: 0;
+  color: #315f89;
+  font-size: 27px;
+  font-weight: 750;
+}
+
+.student-welcome p {
+  margin: 7px 0 0;
+  color: #718ba3;
+  font-size: 14px;
+}
+
+.student-main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 28px;
+  padding: 22px 25px;
+  background: #ffffff;
+  border: 1px solid #dce8f3;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(85, 145, 200, 0.08);
+}
+
+.student-main-header h1 {
+  margin: 0;
+  color: #315f89;
+  font-size: 25px;
+  font-weight: 700;
+}
+
+.student-main-header p {
+  margin: 7px 0 0;
+  color: #718ba3;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.student-main > footer {
+  margin-top: 35px;
+  padding: 18px 5px;
+  color: #718ba3;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Tablet */
+
+@media (max-width: 900px) {
+  .student-layout {
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .student-sidebar {
+    padding: 20px 12px;
+  }
+
+  .student-main-header {
+    padding: 20px;
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 650px) {
+  .app.theme-student:has(.student-layout) {
+    padding: 12px;
+  }
+
+  .student-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-height: auto;
+  }
+
+  .student-sidebar {
+    min-height: auto;
+    padding: 17px;
+  }
+
+  .student-sidebar-brand {
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+  }
+
+  .student-sidebar-navigation {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .student-sidebar-navigation button,
+  .student-sidebar-bottom button {
+    min-width: 0;
+    padding-left: 10px;
+    font-size: 12px;
+  }
+
+  .student-sidebar-bottom {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 16px;
+    padding-top: 15px;
+  }
+
+  .student-main {
+    padding: 0;
+  }
+
+  .student-welcome {
+    margin-bottom: 15px;
+  }
+
+  .student-welcome h1 {
+    font-size: 23px;
+  }
+
+  .student-main-header {
+    align-items: flex-start;
+    padding: 17px;
+    margin-bottom: 20px;
+  }
+
+  .student-main-header h1 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 380px) {
+  .student-sidebar-navigation {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ==================================
+   QUIZZY TYPOGRAPHY IMPROVEMENTS
+================================== */
+
+/* Admin and Student brand */
+.admin-sidebar-brand h2,
+.student-sidebar-brand h2 {
+  font-size: 30px;
+  letter-spacing: -0.5px;
+}
+
+.admin-sidebar-brand p,
+.student-sidebar-brand p {
+  font-size: 14px;
+}
+
+/* Sidebar navigation */
+.admin-sidebar-navigation button,
+.admin-sidebar-bottom button,
+.student-sidebar-navigation button,
+.student-sidebar-bottom button {
+  font-size: 15px;
+  font-weight: 600;
+  min-height: 46px;
+}
+
+/* Welcome headings */
+.admin-welcome h1,
+.student-welcome h1 {
+  font-size: 32px;
+  font-weight: 750;
+  letter-spacing: -0.7px;
+}
+
+.admin-welcome p,
+.student-welcome p {
+  font-size: 15px;
+}
+
+/* Main panel headings */
+.admin-main-header h1,
+.student-main-header h1 {
+  font-size: 27px;
+  font-weight: 700;
+}
+
+.admin-main-header p,
+.student-main-header p {
+  font-size: 14px;
+}
+
+/* Responsive typography */
+@media (max-width: 650px) {
+  .admin-sidebar-brand h2,
+  .student-sidebar-brand h2 {
+    font-size: 26px;
+  }
+
+  .admin-sidebar-navigation button,
+  .admin-sidebar-bottom button,
+  .student-sidebar-navigation button,
+  .student-sidebar-bottom button {
+    font-size: 13px;
+  }
+
+  .admin-welcome h1,
+  .student-welcome h1 {
+    font-size: 25px;
+  }
+
+  .admin-main-header h1,
+  .student-main-header h1 {
+    font-size: 21px;
+  }
+}
+
+/* Larger Quizzy brand name */
+.admin-sidebar-brand h2,
+.student-sidebar-brand h2 {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+}
+
+@media (max-width: 650px) {
+  .admin-sidebar-brand h2,
+  .student-sidebar-brand h2 {
+    font-size: 29px;
+  }
+}

@@ -14,6 +14,11 @@ export default function StudentProfile() {
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [passwordMessage, setPasswordMessage] = useState("")
   const [passwordError, setPasswordError] = useState("")
@@ -101,6 +106,9 @@ export default function StudentProfile() {
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
+      setShowCurrentPassword(false)
+      setShowNewPassword(false)
+      setShowConfirmPassword(false)
     } catch (error) {
       if (error instanceof ApiError) {
         setPasswordError(error.message)
@@ -216,46 +224,128 @@ export default function StudentProfile() {
       <form onSubmit={handlePasswordChange} className="profile-form">
         <div className="form-group">
           <label htmlFor="current-password">Current Password</label>
-          <input
-            id="current-password"
-            type="password"
-            value={currentPassword}
-            onChange={(event) => setCurrentPassword(event.target.value)}
-            placeholder="Enter current password"
-            autoComplete="current-password"
-            required
-            disabled={passwordLoading}
-          />
+
+          <div className="password-input-wrapper">
+            <input
+              id="current-password"
+              type={showCurrentPassword ? "text" : "password"}
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+              placeholder="Enter current password"
+              autoComplete="current-password"
+              required
+              disabled={passwordLoading}
+            />
+
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() =>
+                setShowCurrentPassword((previous) => !previous)
+              }
+              aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+            >
+              <svg
+                width="19"
+                height="19"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+                {!showCurrentPassword && <path d="m3 3 18 18" />}
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div className="form-group">
           <label htmlFor="new-password">New Password</label>
-          <input
-            id="new-password"
-            type="password"
-            value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)}
-            placeholder="Enter new password (minimum 8 characters)"
-            autoComplete="new-password"
-            minLength={8}
-            required
-            disabled={passwordLoading}
-          />
+
+          <div className="password-input-wrapper">
+            <input
+              id="new-password"
+              type={showNewPassword ? "text" : "password"}
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              placeholder="Enter new password (minimum 8 characters)"
+              autoComplete="new-password"
+              minLength={8}
+              required
+              disabled={passwordLoading}
+            />
+
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowNewPassword((previous) => !previous)}
+              aria-label={showNewPassword ? "Hide password" : "Show password"}
+            >
+              <svg
+                width="19"
+                height="19"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+                {!showNewPassword && <path d="m3 3 18 18" />}
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div className="form-group">
           <label htmlFor="confirm-password">Confirm New Password</label>
-          <input
-            id="confirm-password"
-            type="password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            placeholder="Confirm your new password"
-            autoComplete="new-password"
-            minLength={8}
-            required
-            disabled={passwordLoading}
-          />
+
+          <div className="password-input-wrapper">
+            <input
+              id="confirm-password"
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              placeholder="Confirm your new password"
+              autoComplete="new-password"
+              minLength={8}
+              required
+              disabled={passwordLoading}
+            />
+
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() =>
+                setShowConfirmPassword((previous) => !previous)
+              }
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            >
+              <svg
+                width="19"
+                height="19"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+                {!showConfirmPassword && <path d="m3 3 18 18" />}
+              </svg>
+            </button>
+          </div>
         </div>
 
         {passwordMessage && (

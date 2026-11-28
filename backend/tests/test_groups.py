@@ -312,7 +312,7 @@ def test_group_owner_can_add_and_remove_members(
 
     add_response = client.post(
         f"/api/groups/{group_id}/members",
-        json={"user_id": another_student.id},
+        json={"email": another_student.email},
         headers=student_headers,
     )
     assert add_response.status_code == 201
@@ -353,7 +353,7 @@ def test_non_owner_cannot_manage_another_users_group(
 
     add_response = client.post(
         f"/api/groups/{group_id}/members",
-        json={"user_id": another_student.id},
+        json={"email": another_student.email},
         headers=another_student_headers,
     )
     assert add_response.status_code == 403

@@ -2,10 +2,11 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from database import Base, engine
 from migrations import migrate_group_owner_column
-from models import QuizAttempt, QuizAnswer, AuditLog
+from models import QuizAttempt, QuizAnswer, AuditLog, User
 
 from routers.auth import router as auth_router
 from routers.quizzes import router as quizzes_router
@@ -87,11 +88,31 @@ def root():
 # HEALTH CHECK
 # =========================
 
+
+
 @app.get("/api/health")
 def health():
-    return {
-        "status": "ok"
-    }
+    from database import SessionLocal
+
+    db = SessionLocal()
+
+    try:
+        db.execute(text("SELECT 1"))
+
+        return {
+            "status": "ok",
+            "database": "connected"
+        }
+
+    except Exception:
+        return {
+            "status": "error",
+            "database": "disconnected"
+        }
+
+    finally:
+        db.close()
+
 
 
 

@@ -381,6 +381,40 @@ export async function unbanUser(
   })
 }
 
+export interface BulkUserActionResponse {
+  success_count: number
+  failed_count: number
+  processed_user_ids: number[]
+  skipped: {
+    user_id: number
+    reason: string
+  }[]
+}
+
+export async function bulkBanUsers(
+  userIds: number[],
+  reason: string,
+): Promise<BulkUserActionResponse> {
+  return apiRequest<BulkUserActionResponse>("/admin/users/bulk-ban", {
+    method: "POST",
+    body: JSON.stringify({
+      user_ids: userIds,
+      reason,
+    }),
+  })
+}
+
+export async function bulkUnbanUsers(
+  userIds: number[],
+): Promise<BulkUserActionResponse> {
+  return apiRequest<BulkUserActionResponse>("/admin/users/bulk-unban", {
+    method: "POST",
+    body: JSON.stringify({
+      user_ids: userIds,
+    }),
+  })
+}
+
 // Change a user's role.
 export async function changeUserRole(
   userId: number,
@@ -477,6 +511,7 @@ export interface StudentGroup {
   id: number
   name: string
   description: string | null
+  owner_id: number
   permissions: string[]
 }
 
@@ -558,4 +593,67 @@ export async function revokeGroupPermission(
 
 export async function getMyGroups(): Promise<StudentGroup[]> {
   return apiRequest<StudentGroup[]>("/groups/me")
+}
+
+// =========================
+// STUDENT GROUP MANAGEMENT API
+// =========================
+
+export async function createMyGroup(data: {
+  name: string
+  description: string | null
+}): Promise<Group> {
+  return apiRequest<Group>("/groups", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateMyGroup(
+  groupId: number,
+  data: {
+    name?: string
+    description?: string | null
+  },
+): Promise<Group> {
+  return apiRequest<Group>(`/groups/${groupId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteMyGroup(
+  groupId: number,
+): Promise<void> {
+  return apiRequest<void>(`/groups/${groupId}`, {
+    method: "DELETE",
+  })
+}
+
+export async function getMyGroupMembers(
+  groupId: number,
+): Promise<GroupMember[]> {
+  return apiRequest<GroupMember[]>(
+    `/groups/${groupId}/members`,
+  )
+}
+
+export async function addMyGroupMember(
+  groupId: number,
+  email: string,
+): Promise<{ message: string }> {
+  return apiRequest(`/groups/${groupId}/members`, {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  })
+}
+
+export async function removeMyGroupMember(
+  groupId: number,
+  userId: number,
+): Promise<{ message: string }> {
+  return apiRequest(
+    `/groups/${groupId}/members/${userId}`,
+    { method: "DELETE" },
+  )
 }

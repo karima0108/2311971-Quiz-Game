@@ -90,6 +90,22 @@ class GroupResponse(BaseModel):
 class MemberCreate(BaseModel):
     user_id: int = Field(gt=0)
 
+class StudentMemberCreate(BaseModel):
+    email: str = Field(min_length=3, max_length=254)
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value):
+        value = value.strip().lower()
+
+        if not re.fullmatch(
+            r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+",
+            value,
+        ):
+            raise ValueError("Please provide a valid email address")
+
+        return value
+
 
 class PermissionCreate(BaseModel):
     permission: str = Field(min_length=1, max_length=100)
@@ -580,13 +596,40 @@ def delete_student_group(
 # STUDENT OWNER-ONLY MEMBER MANAGEMENT
 # =========================
 
+
+@student_router.get("/{group_id}/members")
+def list_student_group_members(
+    group_id: int,
+    current_user: User = Depends(require_student),
+    db: Session = Depends(get_db),
+):
+    group = get_group_for_owner(
+        group_id,
+        current_user,
+        db,
+    )
+
+    memberships = (
+        db.query(GroupMembership)
+        .filter(GroupMembership.group_id == group.id)
+        .all()
+    )
+
+    return [
+        {
+            "id": membership.user.id,
+            "name": membership.user.name,
+            "email": membership.user.email,
+        }
+        for membership in memberships
+    ]
 @student_router.post(
     "/{group_id}/members",
     status_code=status.HTTP_201_CREATED,
 )
 def add_student_group_member(
     group_id: int,
-    data: MemberCreate,
+    data: StudentMemberCreate,
     current_user: User = Depends(require_student),
     db: Session = Depends(get_db),
 ):
@@ -598,14 +641,14 @@ def add_student_group_member(
 
     user = (
         db.query(User)
-        .filter(User.id == data.user_id)
+        .filter(func.lower(User.email) == data.email)
         .first()
     )
 
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
+            detail="No student account found with this email",
         )
 
     if user.role != "user":
@@ -697,11 +740,12 @@ def get_my_groups(
         group = membership.group
 
         result.append({
-            "id": group.id,
-            "name": group.name,
-            "description": group.description,
-            "permissions": [
-                item.permission for item in group.permissions
+           "id": group.id,
+           "name": group.name,
+           "description": group.description,
+           "owner_id": group.owner_id,
+           "permissions": [
+              item.permission for item in group.permissions
             ],
         })
 
